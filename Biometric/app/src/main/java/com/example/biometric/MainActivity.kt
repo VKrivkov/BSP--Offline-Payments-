@@ -2,39 +2,37 @@ package com.example.biometric
 
 import android.os.Build
 import android.os.Bundle
+import android.security.keystore.KeyGenParameterSpec
+import android.security.keystore.KeyInfo
+import android.security.keystore.KeyProperties
 import android.util.Log
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.biometric.ui.theme.BiometricTheme
-import java.util.concurrent.Executor
-import android.security.keystore.KeyGenParameterSpec
-import android.security.keystore.KeyProperties
-import androidx.annotation.RequiresApi
+import java.security.KeyFactory
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
+import java.security.PublicKey
 import java.security.Signature
-import kotlin.reflect.KFunction0
+import java.util.concurrent.Executor
 import kotlin.reflect.KFunction1
-
 
 
 class MainActivity : AppCompatActivity() {
@@ -45,7 +43,7 @@ class MainActivity : AppCompatActivity() {
     private var currentAuthContext = AuthContext.APP_LAUNCH
     private var initinputText by mutableStateOf("")
     private var initoutputText by mutableStateOf("")
-
+    private var publicKey: PublicKey? = null
 
 
     enum class AuthContext {
@@ -54,6 +52,7 @@ class MainActivity : AppCompatActivity() {
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.S)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -68,7 +67,8 @@ class MainActivity : AppCompatActivity() {
                     } else {
                         // Show authentication screen if authentication is successful
                         AuthenticationScreen("", "", ::handleButtonClick, ::isKeyPairInsideSecurityHardware, ::updateSharedInputText)
-                    }               }
+                    }
+                }
             }
         }
         Log.d("MainActivity", "onCreate: Starting application setup")
@@ -77,6 +77,7 @@ class MainActivity : AppCompatActivity() {
         promptInfo = createPromptInfo()
         biometricPrompt.authenticate(promptInfo)
         triggerBiometricAuthentication(AuthContext.APP_LAUNCH)
+
 
     }
 
@@ -93,15 +94,34 @@ class MainActivity : AppCompatActivity() {
                 showAuthenticationFailedScreen()
             }
 
-            @RequiresApi(Build.VERSION_CODES.R)
+            @RequiresApi(Build.VERSION_CODES.S)
             override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
                 super.onAuthenticationSucceeded(result)
                 Log.d("BiometricPrompt", "Authentication succeeded")
                 when (currentAuthContext) {
                     AuthContext.APP_LAUNCH -> handleAppLaunch()
-                    AuthContext.SIGN_DATA -> handleSigning()
+                    AuthContext.SIGN_DATA -> {
+                        // Attempt to sign immediately after authentication success
+                        try {
+                            val signature = result.cryptoObject?.signature
+                            if (signature != null && currentAuthContext == AuthContext.SIGN_DATA) {
+                                signature.update(initinputText.toByteArray())
+                                val signedData = signature.sign()
+                                initoutputText = "Signed Output: ${bytesToHex(signedData)}; Public Key: $publicKey"
+                                updateUI(initoutputText)
+                            } else {
+                                initoutputText = "Crypto object is not available or context is incorrect."
+                                updateUI(initoutputText)
+                            }
+                        } catch (e: Exception) {
+                            Log.e("MainActivity", "Signing error: ${e.localizedMessage}")
+                            initoutputText = "Signing error: ${e.localizedMessage}"
+                            updateUI(initoutputText)
+                        }
+                    }
                 }
             }
+
 
             override fun onAuthenticationFailed() {
                 Log.e("BiometricPrompt", "onAuthenticationError: FATAL ERROR")
@@ -113,6 +133,7 @@ class MainActivity : AppCompatActivity() {
         return BiometricPrompt(this, executor, callback)
     }
 
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun handleAppLaunch(){
         setContent {
             BiometricTheme {
@@ -137,20 +158,26 @@ class MainActivity : AppCompatActivity() {
     }
 
     // Call this function when the button is clicked
-    private fun handleButtonClick() {
-        currentAuthContext = AuthContext.SIGN_DATA
-        biometricPrompt.authenticate(promptInfo)
-    }
-
     @RequiresApi(Build.VERSION_CODES.R)
-    private fun handleSigning(){
+    private fun handleButtonClick() {
         generateKeyPair()
-        val signedData = signData(initinputText)
-        initoutputText = "Signed Output: ${signedData?.let { bytesToHex(it) }}"
-        updateUI(initoutputText)
+        try {
+            val keyStore = KeyStore.getInstance("AndroidKeyStore")
+            keyStore.load(null)
+            val privateKey = keyStore.getKey("biometricKeyAlias", null) as? PrivateKey
+            val signature = Signature.getInstance("SHA256withECDSA")
+            signature.initSign(privateKey)
 
+            val cryptoObject = BiometricPrompt.CryptoObject(signature)
+            currentAuthContext = AuthContext.SIGN_DATA
+            biometricPrompt.authenticate(promptInfo, cryptoObject)  // Pass the CryptoObject here
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Error setting up signature: ${e.localizedMessage}")
+        }
     }
 
+
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun updateUI(text: String) {
         setContent {
             BiometricTheme {
@@ -181,27 +208,17 @@ class MainActivity : AppCompatActivity() {
             ).apply {
                 setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
                 setUserAuthenticationRequired(true)
-                setUserAuthenticationParameters(3, KeyProperties.AUTH_BIOMETRIC_STRONG) // Adjust based on your requirement
+                setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG) // Adjust based on your requirement
             }.build()
             keyPairGenerator.initialize(parameterSpec)
             keyPairGenerator.generateKeyPair()
+            val keyPair = keyPairGenerator.generateKeyPair()
+            publicKey = keyPair.public
         } catch (e: Exception) {
             Log.e("MainActivity", "Key pair generation failed", e)
         }
     }
 
-    private fun signData(input: String): ByteArray? {
-        val keyStore = KeyStore.getInstance("AndroidKeyStore")
-        keyStore.load(null)
-        val privateKey = keyStore.getKey("biometricKeyAlias", null) as? PrivateKey
-        val signature = Signature.getInstance("SHA256withECDSA")
-
-        return privateKey?.let {
-            signature.initSign(it)
-            signature.update(input.toByteArray())
-            signature.sign()
-        }
-    }
 
     private fun bytesToHex(bytes: ByteArray): String {
         val hexArray = "0123456789ABCDEF".toCharArray()
@@ -234,31 +251,27 @@ class MainActivity : AppCompatActivity() {
 
 
 
-    private fun isKeyPairInsideSecurityHardware(): Boolean {
+    @RequiresApi(Build.VERSION_CODES.S)
+    private fun isKeyPairInsideSecurityHardware()  {
         try {
             val keyStore = KeyStore.getInstance("AndroidKeyStore")
             keyStore.load(null)
 
-            // Retrieve the KeyGenParameterSpec from the KeyPairGenerator
-            val keyGenParameterSpec = keyStore.getKey("biometricKeyAlias", null)?.let { entry ->
-                val keyPairGenerator = KeyPairGenerator.getInstance(
-                    KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore"
-                )
-                keyPairGenerator.initialize(null, null)
-                keyPairGenerator.javaClass.getDeclaredMethod("getKeyGenParameterSpec", entry.javaClass).invoke(keyPairGenerator, entry) as KeyGenParameterSpec
-            }
+            // Retrieve the private key; this is the correct approach as KeyInfo only works with private keys
+            val privateKey = keyStore.getKey("biometricKeyAlias", null) as? PrivateKey
+                ?: throw Exception("No private key found under the given alias.")
 
-            if (keyGenParameterSpec != null) {
-                return keyGenParameterSpec.isStrongBoxBacked
-            }
+            val factory = KeyFactory.getInstance(privateKey.algorithm, "AndroidKeyStore")
+            val keyInfo = factory.getKeySpec(privateKey, KeyInfo::class.java) as KeyInfo
 
+            var secLevel = keyInfo.securityLevel
+
+            Log.d("SecurityLevel", "Is key inside secure hardware: $secLevel")
 
         } catch (e: Exception) {
             Log.e("MainActivity", "Error checking if key pair is inside secure hardware", e)
         }
-        return false
     }
-
 
 
 }
@@ -276,7 +289,7 @@ fun AuthenticationScreen(
     initInputText: String,
     outputText: String, // Now passed directly and used as read-only
     onButtonClick: () -> Unit,
-    isKeyPairInsideSecurityHardware: () -> Boolean,
+    isKeyPairInsideSecurityHardware:() -> Unit,
     updateInputText: (String) -> Unit // Function to update text
 
 ) {
@@ -315,7 +328,9 @@ fun AuthenticationScreen(
         if (outputText.isNotEmpty()) {
             Text(
                 text = outputText,
-                modifier = Modifier.border(1.dp, Color.Gray).padding(16.dp)
+                modifier = Modifier
+                    .border(1.dp, Color.Gray)
+                    .padding(16.dp)
             )
         }
         Spacer(modifier = Modifier.height(16.dp))
