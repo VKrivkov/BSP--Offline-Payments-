@@ -14,11 +14,8 @@ function parseCertificate(pemCert) {
     const cert = new crypto.X509Certificate(pemCert); // Corrected constructor usage
 
     return {
-        subject: cert.subject,
-        issuer: cert.issuer,
-        validFrom: cert.validFrom.toISOString(), // Ensure date is properly formatted
-        validTo: cert.validTo.toISOString(), // Ensure date is properly formatted
-        publicKey: cert.publicKey.export({ format: 'pem', type: 'spki' }) // Export public key in PEM format
+        publicKey: cert.publicKey.export({ format: 'pem', type: 'spki' }),
+        raw: pemCert // Include the raw PEM certificate in the response
     };
 }
 
