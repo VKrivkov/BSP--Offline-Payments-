@@ -17,8 +17,21 @@ app.get('/', (req, res) => {
 app.post('/submit-certificate', (req, res) => {
     try {
         const pemCert = req.body.pemCertificate;
-        // Parse the PEM certificate to a Forge object
-        const cert = forge.pki.certificateFromPem(pemCert);
+        const cert = forge.pki.certificateFromPem(pemCert); // Parse the PEM certificate to a Forge object
+
+        // Attempt to handle various types of public keys
+        let publicKey;
+        try {
+            if (cert.publicKey.n && cert.publicKey.e) { // RSA specific properties
+                publicKey = cert.publicKey;
+            } else if (cert.publicKey.getPublicKey) { // ECDSA or other types
+                publicKey = cert.publicKey.getPublicKey();
+            } else {
+                throw new Error("Unsupported public key type.");
+            }
+        } catch (pubKeyError) {
+            throw new Error("Error parsing public key: " + pubKeyError.message);
+        }
 
         // Extract information from the certificate
         const subject = cert.subject.attributes.map(attr => `${attr.name}=${attr.value}`).join(', ');
@@ -32,6 +45,7 @@ app.post('/submit-certificate', (req, res) => {
         console.log(`Issuer: ${issuer}`);
         console.log(`Valid From: ${validFrom}`);
         console.log(`Valid To: ${validTo}`);
+        console.log(`Public Key: ${publicKey}`);
 
         // Respond to the client
         res.send({
