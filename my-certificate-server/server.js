@@ -3,7 +3,7 @@ const bodyParser = require('body-parser');
 const forge = require('node-forge');
 
 const app = express();
-const port = 3000;
+const port = 3456;
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
