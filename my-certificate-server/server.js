@@ -1,12 +1,26 @@
 const express = require('express');
 const bodyParser = require('body-parser');
-const forge = require('node-forge');
+const crypto = require('crypto');
+const fs = require('fs');
 
 const app = express();
 const port = 3456;
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
+
+// Helper function to load and parse the certificate
+function parseCertificate(pemCert) {
+    const cert = crypto.X509Certificate.fromPEM(pemCert);
+
+    return {
+        subject: cert.subject,
+        issuer: cert.issuer,
+        validFrom: cert.validFrom,
+        validTo: cert.validTo,
+        publicKey: cert.publicKey
+    };
+}
 
 // Route to handle GET requests to the root URL
 app.get('/', (req, res) => {
@@ -17,43 +31,23 @@ app.get('/', (req, res) => {
 app.post('/submit-certificate', (req, res) => {
     try {
         const pemCert = req.body.pemCertificate;
-        const cert = forge.pki.certificateFromPem(pemCert); // Parse the PEM certificate to a Forge object
-
-        // Attempt to handle various types of public keys
-        let publicKey;
-        try {
-            if (cert.publicKey.n && cert.publicKey.e) { // RSA specific properties
-                publicKey = cert.publicKey;
-            } else if (cert.publicKey.getPublicKey) { // ECDSA or other types
-                publicKey = cert.publicKey.getPublicKey();
-            } else {
-                throw new Error("Unsupported public key type.");
-            }
-        } catch (pubKeyError) {
-            throw new Error("Error parsing public key: " + pubKeyError.message);
-        }
-
-        // Extract information from the certificate
-        const subject = cert.subject.attributes.map(attr => `${attr.name}=${attr.value}`).join(', ');
-        const issuer = cert.issuer.attributes.map(attr => `${attr.name}=${attr.value}`).join(', ');
-        const validFrom = cert.validity.notBefore;
-        const validTo = cert.validity.notAfter;
+        const certDetails = parseCertificate(pemCert);
 
         // Logging for demonstration
         console.log('Received Certificate:');
-        console.log(`Subject: ${subject}`);
-        console.log(`Issuer: ${issuer}`);
-        console.log(`Valid From: ${validFrom}`);
-        console.log(`Valid To: ${validTo}`);
-        console.log(`Public Key: ${publicKey}`);
+        console.log(`Subject: ${certDetails.subject}`);
+        console.log(`Issuer: ${certDetails.issuer}`);
+        console.log(`Valid From: ${certDetails.validFrom}`);
+        console.log(`Valid To: ${certDetails.validTo}`);
+        console.log(`Public Key: ${certDetails.publicKey}`);
 
         // Respond to the client
         res.send({
             message: 'Certificate received and parsed successfully',
-            subject,
-            issuer,
-            validFrom,
-            validTo
+            subject: certDetails.subject,
+            issuer: certDetails.issuer,
+            validFrom: certDetails.validFrom,
+            validTo: certDetails.validTo
         });
     } catch (error) {
         console.error('Error parsing the certificate:', error);
@@ -62,5 +56,5 @@ app.post('/submit-certificate', (req, res) => {
 });
 
 app.listen(port, '0.0.0.0', () => {
-    console.log(`Server 11 listening at http://0.0.0.0:${port}`);
+    console.log(`Server listening at http://0.0.0.0:${port}`);
 });
