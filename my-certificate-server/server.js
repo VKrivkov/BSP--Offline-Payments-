@@ -15,7 +15,7 @@ function parseCertificate(pemCert) {
 
     return {
         publicKey: cert.publicKey.export({ format: 'pem', type: 'spki' }),
-        raw: pemCert // Include the raw PEM certificate in the response
+        raw: cert // Include the raw PEM certificate in the response
     };
 }
 
