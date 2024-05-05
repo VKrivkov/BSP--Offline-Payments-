@@ -11,14 +11,14 @@ app.use(bodyParser.json());
 
 // Helper function to load and parse the certificate
 function parseCertificate(pemCert) {
-    const cert = crypto.X509Certificate.fromPEM(pemCert);
+    const cert = new crypto.X509Certificate(pemCert); // Corrected constructor usage
 
     return {
         subject: cert.subject,
         issuer: cert.issuer,
-        validFrom: cert.validFrom,
-        validTo: cert.validTo,
-        publicKey: cert.publicKey
+        validFrom: cert.validFrom.toISOString(), // Ensure date is properly formatted
+        validTo: cert.validTo.toISOString(), // Ensure date is properly formatted
+        publicKey: cert.publicKey.export({ format: 'pem', type: 'spki' }) // Export public key in PEM format
     };
 }
 
@@ -47,7 +47,8 @@ app.post('/submit-certificate', (req, res) => {
             subject: certDetails.subject,
             issuer: certDetails.issuer,
             validFrom: certDetails.validFrom,
-            validTo: certDetails.validTo
+            validTo: certDetails.validTo,
+            publicKey: certDetails.publicKey
         });
     } catch (error) {
         console.error('Error parsing the certificate:', error);
@@ -56,5 +57,5 @@ app.post('/submit-certificate', (req, res) => {
 });
 
 app.listen(port, '0.0.0.0', () => {
-    console.log(`Server listening at http://0.0.0.0:${port}`);
+    console.log(`Server test listening at http://0.0.0.0:${port}`);
 });
