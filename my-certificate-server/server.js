@@ -33,7 +33,7 @@ app.post('/submit-certificate', (req, res) => {
         // Logging for demonstration
         console.log('Received Certificate:');
         console.log(`Public Key: ${certDetails.publicKey}`);
-        console.log(`Data: ${certDetails.publicKey}`)
+        console.log(`Data: ${certDetails.raw}`)
 
         // Respond to the client
         res.send({
