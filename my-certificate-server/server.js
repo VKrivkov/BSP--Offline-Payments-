@@ -32,11 +32,8 @@ app.post('/submit-certificate', (req, res) => {
 
         // Logging for demonstration
         console.log('Received Certificate:');
-        console.log(`Subject: ${certDetails.subject}`);
-        console.log(`Issuer: ${certDetails.issuer}`);
-        console.log(`Valid From: ${certDetails.validFrom}`);
-        console.log(`Valid To: ${certDetails.validTo}`);
         console.log(`Public Key: ${certDetails.publicKey}`);
+        console.log(`Data: ${certDetails.publicKey}`)
 
         // Respond to the client
         res.send({
