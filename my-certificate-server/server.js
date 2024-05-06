@@ -65,9 +65,14 @@ function verifyRootCertificate(certDetails) {
         'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==';
 
         try {
-            const forgeCert = forge.pki.certificateFromPem(certDetails.publicKey);
-            const publicKey = forgeCert.publicKey;
-            const fingerprint = forge.pki.getPublicKeyFingerprint(publicKey, { encoding: 'hex', md: forge.md.sha1.create() });
+            // Convert the PEM-formatted public key to a Forge public key object
+            const publicKey = forge.pki.publicKeyFromPem(publicKeyPem);
+            
+            // Generate a fingerprint of the public key
+            const md = forge.md.sha1.create(); // You can use sha256 or another hash function as needed
+            const fingerprint = forge.pki.getPublicKeyFingerprint(publicKey, {encoding: 'hex', md: md});
+            
+            // Compare the fingerprint to your known Google root key fingerprint
             return fingerprint === googleRootKey;
         } catch (error) {
             console.error('Failed to process public key:', error);
