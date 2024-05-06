@@ -50,18 +50,18 @@ function loadCertificate(pemCert) {
 // Function to verify the root certificate
 function verifyRootPublicKey(cert) {
     try {
+        // Decode the public key from PEM format
         const publicKey = forge.pki.publicKeyFromPem(GOOGLE_ROOT_KEY);
-       // Specify the algorithm as "ecdsa-with-SHA256" (ECDSA with SHA-256)
-        const algorithm = 'ecdsa-with-SHA256';
 
         // Create an EC instance
-        const ec = new EC('p256'); // Assuming the key is generated with the p256 curve
+        const ec = new EC('p256');
 
-        // Verify if the certificate's public key matches the root public key
-        const key = ec.keyFromPublic(publicKey, 'pem');
+        // Extract the signature and certificate data
         const signature = Buffer.from(cert.signature, 'base64'); // Assuming cert.signature contains the signature in base64 format
         const data = Buffer.from(cert.raw, 'binary'); // Assuming cert.raw contains the raw certificate data
-        const verified = key.verify(data, signature);
+
+        // Verify if the certificate's public key matches the root public key
+        const verified = ec.verify(data, signature, publicKey);
         console.log('Certificate verification result:', verified);
         return verified;
     } catch (error) {
