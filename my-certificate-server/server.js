@@ -50,38 +50,17 @@ function loadCertificate(pemCert) {
     }
 }
 
-function convertECPublicKeyToPEM(publicKey) {
-    const ec = new EC('p256');  // Match this to the curve used by your EC keys
-
-    // Convert the public key to a format that can be used to extract coordinates
-    const keyObject = ec.keyFromPublic(publicKey.keyRaw.toString('hex'), 'hex');
-
-    // Convert coordinates to buffer and then to base64 string
-    const x = Buffer.from(keyObject.getPublic().getX().toArray()).toString('base64');
-    const y = Buffer.from(keyObject.getPublic().getY().toArray()).toString('base64');
-
-    // Create JWK from the EC key parts
-    const jwk = {
-        kty: "EC",
-        crv: "P-256", // Ensure this matches the curve used by your public key
-        x: x,
-        y: y
-    };
-
-    return pem2jwk(jwk);
-}
 
 // Function to verify the root certificate
 function verifyRootPublicKey(certPem) {
     try {
-        const cert = Certificate.fromPEM(Buffer.from(certPem));
-        
-        let publicKeyPem;
-        publicKeyPem = convertECPublicKeyToPEM(cert.publicKey);
+        const cert = forge.pki.certificateFromPem(certPem);
 
+        // Extract the public key from the certificate and convert it to PEM format
+        const certPublicKeyPem = forge.pki.publicKeyToPem(cert.publicKey);
 
-        const normalizePem = (pem) => pem.replace(/-----(BEGIN|END) PUBLIC KEY-----|\s/g, '');
-        return normalizePem(publicKeyPem) === normalizePem(GOOGLE_ROOT_KEY);
+        // Compare the public key in the certificate with the Google root public key
+        return certPublicKeyPem === GOOGLE_ROOT_PUBLIC_KEY_PEM;
     } catch (error) {
         console.error('Error verifying root public key:', error);
         throw error;
