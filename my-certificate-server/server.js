@@ -68,7 +68,7 @@ function verifyRootCertificate(publicKey) {
 
         try {
 
-            return publicKey === google;
+            return publicKey === googleRootKey;
         } catch (error) {
             console.error('Failed to process public key:', error);
             return false;
