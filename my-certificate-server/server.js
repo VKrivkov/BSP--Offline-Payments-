@@ -19,7 +19,7 @@ const { Certificate } = require('@fidm/x509');
 const { ASN1 } = require('@lapo/asn1js');
 
 const GOOGLE_ROOT_CERT =
-"-----BEGIN PUBLIC KEY-----"
+"-----BEGIN PUBLIC KEY-----\n"
 'MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr7bHgiuxpwHsK7Qui8xU' +
 'FmOr75gvMsd/dTEDDJdSSxtf6An7xyqpRR90PL2abxM1dEqlXnf2tqw1Ne4Xwl5j' +
 'lRfdnJLmN0pTy/4lj4/7tv0Sk3iiKkypnEUtR6WfMgH0QZfKHM1+di+y9TFRtv6y' +
@@ -32,7 +32,7 @@ const GOOGLE_ROOT_CERT =
 'gLiMm0jhO2B6tUXHI/+MRPjy02i59lINMRRev56GKtcd9qO/0kUJWdZTdA2XoS82' +
 'ixPvZtXQpUpuL12ab+9EaDK8Z4RHJYYfCT3Q5vNAXaiWQ+8PTWm2QgBR/bkwSWc+' +
 'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==' +
-"-----END PUBLIC KEY-----"; 
+"\n-----END PUBLIC KEY-----"; 
 
 // Helper function to load and parse the certificate
 function loadCertificate(pemCert) {
@@ -70,7 +70,6 @@ function parseAttestationExtension(cert) {
 app.post('/submit-certificate', async (req, res) => {
     try {
         const pemCert = req.body.pemCertificate.trim();
-        
         console.log('Received PEM certificate from request body:', pemCert); // Log the PEM certificate from request body
         const cert = loadCertificate(pemCert);
 
