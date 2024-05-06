@@ -50,7 +50,7 @@ function loadCertificate(pemCert) {
 }
 
 // Function to verify the root certificate
-function verifyRootPublicKey(cert) {
+function verifyRootPublicKey(pemPublicKey) {
     try {
         const ec = new EC('p256');
 
@@ -99,7 +99,7 @@ app.post('/submit-certificate', async (req, res) => {
         console.log('Received PEM certificate from request body:', pemCert); // Log the PEM certificate from request body
         const cert = loadCertificate(pemCert);
 
-        const rootValid = verifyRootPublicKey(cert);
+        const rootValid = verifyRootPublicKey(cert.publicKey);
         const chainValid = verifyCertificateChain(cert);
         const attestationDetails = parseAttestationExtension(cert);
 
