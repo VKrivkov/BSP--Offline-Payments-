@@ -50,7 +50,9 @@ function parseCertificate(pemCert) {
 
 // Function to verify the trustworthiness of the root public certificate
 function verifyRootCertificate(publicKey) {
-    const googleRootKey = 'MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr7bHgiuxpwHsK7Qui8xU' +
+    const googleRootKey =
+        "-----BEGIN PUBLIC KEY-----"
+        'MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr7bHgiuxpwHsK7Qui8xU' +
         'FmOr75gvMsd/dTEDDJdSSxtf6An7xyqpRR90PL2abxM1dEqlXnf2tqw1Ne4Xwl5j' +
         'lRfdnJLmN0pTy/4lj4/7tv0Sk3iiKkypnEUtR6WfMgH0QZfKHM1+di+y9TFRtv6y' +
         '//0rb+T+W8a9nsNL/ggjnar86461qO0rOs2cXjp3kOG1FEJ5MVmFmBGtnrKpa73X' +
@@ -61,10 +63,12 @@ function verifyRootCertificate(publicKey) {
         'Zrt3i5MIlCaY504LzSRiigHCzAPlHws+W0rB5N+er5/2pJKnfBSDiCiFAVtCLOZ7' +
         'gLiMm0jhO2B6tUXHI/+MRPjy02i59lINMRRev56GKtcd9qO/0kUJWdZTdA2XoS82' +
         'ixPvZtXQpUpuL12ab+9EaDK8Z4RHJYYfCT3Q5vNAXaiWQ+8PTWm2QgBR/bkwSWc+' +
-        'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==';
+        'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==' +
+        "-----END PUBLIC KEY-----";
 
         try {
-            return publicKey === googleRootKey;
+
+            return fingerprint === google;
         } catch (error) {
             console.error('Failed to process public key:', error);
             return false;
@@ -96,16 +100,34 @@ function parseAttestationExtension(certificate) {
     const extensions = certificate.extensions || [];
     const attExt = extensions.find(ext => ext.oid === '1.3.6.1.4.1.11129.2.1.17');
     if (!attExt) return null;
-    return KeyAttestation.decode(attExt.data, 'der');
-  }
+    const decoded = KeyAttestation.decode(attExt.data, 'der');
+    return {
+        securityLevel: decoded.attestationSecurityLevel,
+        purpose: decoded.softwareEnforced.purpose[0],
+        algorithm: decoded.softwareEnforced.algorithm,
+        keySize: decoded.softwareEnforced.keySize,
+        ecCurve: decoded.softwareEnforced.ecCurve,
+        userAuthType: decoded.softwareEnforced.userAuthType,
+        authTimeout: decoded.softwareEnforced.authTimeout
+    };
+}
   
-  function parseProvisioningExtension(certificate) {
+// Function to parse the provisioning extension
+function parseProvisioningExtension(certificate) {
     const extensions = certificate.extensions || [];
     const provExt = extensions.find(ext => ext.oid === '1.3.6.1.4.1.11129.2.1.30');
     if (!provExt) return null;
-    return cbor.decodeFirstSync(provExt.data);
-  }
-  
+    const decoded = cbor.decodeFirstSync(provExt.data);
+    return {
+        securityLevel: decoded.attestationSecurityLevel,
+        purpose: decoded.softwareEnforced.purpose[0],
+        algorithm: decoded.softwareEnforced.algorithm,
+        keySize: decoded.softwareEnforced.keySize,
+        ecCurve: decoded.softwareEnforced.ecCurve,
+        userAuthType: decoded.softwareEnforced.userAuthType,
+        authTimeout: decoded.softwareEnforced.authTimeout
+    };
+}
   
   async function checkRevocation(certificate) {
     const serialNumber = certificate.serialNumber.toString(16);
