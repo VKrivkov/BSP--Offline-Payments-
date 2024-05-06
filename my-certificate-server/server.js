@@ -50,13 +50,12 @@ function loadCertificate(pemCert) {
     }
 }
 
-
 // Function to verify the root certificate
 function verifyRootPublicKey(certPem) {
     try {
         // Load the certificate using crypto module
          // Create a certificate object from the PEM string
-         const cert = new crypto.X509Certificate(certPem);
+         const cert = loadCertificate(certPem)
 
          // Extract the public key in PEM format
          const certPublicKeyPem = cert.publicKey.export({ type: 'spki', format: 'pem' });
@@ -72,10 +71,22 @@ function verifyRootPublicKey(certPem) {
     }
 }
 
-// Function to verify the certificate chain
-function verifyCertificateChain(cert) {
-    const issuerCert = Certificate.fromPEM(Buffer.from(GOOGLE_ROOT_KEY));
-    return issuerCert.checkSignature(cert) === null;
+function verifyCertificateChain(chain) {
+    for (let i = 0; i < chain.length - 1; i++) {
+        const currentCert = chain[i];
+        const nextCert = chain[i + 1];
+
+        // Verify that the current certificate signs the next certificate
+        const verified = forge.pki.verifyCertificateChain({
+            caStore: [currentCert],
+            chain: [nextCert]
+        });
+
+        if (!verified) {
+            return false;
+        }
+    }
+    return true;
 }
 
 // Parse Key Attestation Extension
