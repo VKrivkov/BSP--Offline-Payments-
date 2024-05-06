@@ -64,8 +64,9 @@ function verifyRootCertificate(publicKey) {
         'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==';
 
         try {
+            const md = forge.md.sha256.create(); // You can also use sha1 or other hash functions
+
             const fingerprint = forge.pki.getPublicKeyFingerprint(publicKey, {encoding: 'hex', md: md});
-            
             return fingerprint === googleRootKey;
         } catch (error) {
             console.error('Failed to process public key:', error);
