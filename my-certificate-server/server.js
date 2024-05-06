@@ -68,7 +68,7 @@ function verifyRootCertificate(publicKey) {
 
         try {
 
-            return fingerprint === google;
+            return publicKey === google;
         } catch (error) {
             console.error('Failed to process public key:', error);
             return false;
