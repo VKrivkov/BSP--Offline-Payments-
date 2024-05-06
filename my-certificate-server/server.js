@@ -51,17 +51,21 @@ function loadCertificate(pemCert) {
 }
 
 function convertECPublicKeyToPEM(publicKey) {
-    const ec = new EC('p256');  // Make sure the curve name is correct for your keys
+    const ec = new EC('p256');  // Match this to the curve used by your EC keys
 
     // Convert the public key to a format that can be used to extract coordinates
     const keyObject = ec.keyFromPublic(publicKey.keyRaw.toString('hex'), 'hex');
+
+    // Convert coordinates to buffer and then to base64 string
+    const x = Buffer.from(keyObject.getPublic().getX().toArray()).toString('base64');
+    const y = Buffer.from(keyObject.getPublic().getY().toArray()).toString('base64');
 
     // Create JWK from the EC key parts
     const jwk = {
         kty: "EC",
         crv: "P-256", // Ensure this matches the curve used by your public key
-        x: keyObject.getPublic().getX().toString('base64'),
-        y: keyObject.getPublic().getY().toString('base64')
+        x: x,
+        y: y
     };
 
     return pem2jwk(jwk);
