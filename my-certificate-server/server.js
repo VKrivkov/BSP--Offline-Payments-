@@ -60,11 +60,8 @@ function verifyRootPublicKey(certPem) {
          // Extract the public key in PEM format
          const certPublicKeyPem = cert.publicKey;
  
-         // Function to normalize PEM strings for accurate comparison
-         const normalizePem = pem => pem.replace(/\r?\n|\r|\s+/g, '').trim();
- 
          // Compare normalized PEM strings
-         return normalizePem(certPublicKeyPem) === normalizePem(GOOGLE_ROOT_KEY);
+         return certPublicKeyPem === GOOGLE_ROOT_KEY;
     } catch (error) {
         console.error('Error verifying root public key:', error);
         throw error;
