@@ -69,7 +69,8 @@ function parseAttestationExtension(cert) {
 // Function to handle incoming certificates
 app.post('/submit-certificate', async (req, res) => {
     try {
-        const pemCert = req.body.pemCertificate;
+        const pemCert = req.body.pemCertificate.trim();
+        
         console.log('Received PEM certificate from request body:', pemCert); // Log the PEM certificate from request body
         const cert = loadCertificate(pemCert);
 
