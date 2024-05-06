@@ -136,7 +136,7 @@ app.post('/submit-certificate', async (req, res) => {
         const attestationDetails = parseAttestationExtension(certDetails.raw);
         const provisioningInfo = parseProvisioningExtension(certDetails.raw);
         const revocationStatus = await checkRevocation(certDetails.raw);
-        const root = verifyRootCertificate(certDetails);
+        const root = verifyRootCertificate(publicKey);
         const chain = verifyCertificateChain(certDetails.raw);
 
         // Logging for demonstration
@@ -145,6 +145,10 @@ app.post('/submit-certificate', async (req, res) => {
         console.log(`Data: ${certDetails.raw}`)
         console.log(`Root: ${root}`)
         console.log(`Chain: ${chain}`)
+        console.log(`attestationDetails: ${attestationDetails}`)
+        console.log(`provisioningInfo: ${provisioningInfo}`)
+        console.log(`revocationStatus: ${revocationStatus}`)
+
 
 
 
