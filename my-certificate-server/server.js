@@ -58,7 +58,7 @@ function verifyRootPublicKey(certPem) {
          const cert = loadCertificate(certPem)
 
          // Extract the public key in PEM format
-         const certPublicKeyPem = cert.publicKey.export({ type: 'spki', format: 'pem' });
+         const certPublicKeyPem = cert.publicKey;
  
          // Function to normalize PEM strings for accurate comparison
          const normalizePem = pem => pem.replace(/\r?\n|\r|\s+/g, '').trim();
