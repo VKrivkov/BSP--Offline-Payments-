@@ -21,7 +21,7 @@ const { Certificate } = require('@fidm/x509');
 const { ASN1 } = require('@lapo/asn1js');
 
 const GOOGLE_ROOT_KEY =
-"-----BEGIN PUBLIC KEY-----\n" +
+//"-----BEGIN PUBLIC KEY-----\n" +
 'MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr7bHgiuxpwHsK7Qui8xU' +
 'FmOr75gvMsd/dTEDDJdSSxtf6An7xyqpRR90PL2abxM1dEqlXnf2tqw1Ne4Xwl5j' +
 'lRfdnJLmN0pTy/4lj4/7tv0Sk3iiKkypnEUtR6WfMgH0QZfKHM1+di+y9TFRtv6y' +
@@ -33,8 +33,8 @@ const GOOGLE_ROOT_KEY =
 'Zrt3i5MIlCaY504LzSRiigHCzAPlHws+W0rB5N+er5/2pJKnfBSDiCiFAVtCLOZ7' +
 'gLiMm0jhO2B6tUXHI/+MRPjy02i59lINMRRev56GKtcd9qO/0kUJWdZTdA2XoS82' +
 'ixPvZtXQpUpuL12ab+9EaDK8Z4RHJYYfCT3Q5vNAXaiWQ+8PTWm2QgBR/bkwSWc+' +
-'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==' +
-"\n-----END PUBLIC KEY-----";
+'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ=='; //+
+//"\n-----END PUBLIC KEY-----";
 
 // Helper function to load and parse the certificate
 function loadCertificate(pemCert) {
@@ -51,17 +51,19 @@ function loadCertificate(pemCert) {
 function verifyRootPublicKey(cert) {
     try {
         // Decode the public key from PEM format
-        const publicKey = forge.pki.publicKeyFromPem(GOOGLE_ROOT_KEY);
+        //const publicKey = forge.pki.publicKeyFromPem(GOOGLE_ROOT_KEY);
 
         // Create an EC instance
         const ec = new EC('p256');
+
+        const publicKey = ec.keyFromPublic(GOOGLE_ROOT_KEY, 'hex');
 
         // Extract the signature and certificate data
         const signature = Buffer.from(cert.signature, 'base64'); // Assuming cert.signature contains the signature in base64 format
         const data = Buffer.from(cert.raw, 'binary'); // Assuming cert.raw contains the raw certificate data
 
         // Verify if the certificate's public key matches the root public key
-        const verified = ec.verify(data, signature, publicKey);
+        const verified = publicKey.verify(data, signature);
         console.log('Certificate verification result:', verified);
         return verified;
     } catch (error) {
