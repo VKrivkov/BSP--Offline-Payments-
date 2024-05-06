@@ -54,11 +54,13 @@ function verifyRootPublicKey(cert) {
     try {
         const ec = new EC('p256');
 
-        // Convert PEM to JWK
-        const jwk = pem2jwk(GOOGLE_ROOT_KEY);
-
-        // Convert JWK to hex format if necessary
-        const publicKeyHex = jwk.x + jwk.y; // This is a simplification, might require more precise handling
+        // Decode PEM format to a usable public key format
+        const pki = forge.pki;
+        const publicKeyFromPem = pki.publicKeyFromPem(GOOGLE_ROOT_KEY);
+        // Extract the public key as a binary DER encoded data
+        const publicKeyDer = forge.asn1.toDer(pki.publicKeyToAsn1(publicKeyFromPem)).getBytes();
+        // Convert binary DER to hexadecimal
+        const publicKeyHex = Buffer.from(publicKeyDer, 'binary').toString('hex');
 
         const publicKey = ec.keyFromPublic(publicKeyHex, 'hex');
 
