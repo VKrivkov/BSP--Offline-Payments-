@@ -1,6 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
+const forge = require('node-forge');
 const fs = require('fs');
 const axios = require('axios');
 const CRL_URL = 'https://android.googleapis.com/attestation/status';
@@ -116,17 +117,22 @@ app.get('/', (req, res) => {
 });
 
 // Route to receive the certificate
-app.post('/submit-certificate', (req, res) => {
+app.post('/submit-certificate', async (req, res) => {
     try {
         const pemCert = req.body.pemCertificate;
         const certDetails = parseCertificate(pemCert);
+        const attestationDetails = parseAttestationExtension(certDetails.raw);
+        const provisioningInfo = parseProvisioningExtension(certDetails.raw);
+        const revocationStatus = await checkRevocation(certDetails.raw);
+        const root = verifyRootCertificate(certDetails);
+        const chain = verifyCertificateChain(certDetails.raw);
 
         // Logging for demonstration
         console.log('Received Certificate:');
         console.log(`Public Key: ${certDetails.publicKey}`);
         console.log(`Data: ${certDetails.raw}`)
-        console.log(`Root: ${verifyRootCertificate(certDetails)}`)
-        console.log(`Chain: ${verifyCertificateChain(certDetails.raw)}`)
+        console.log(`Root: ${root}`)
+        console.log(`Chain: ${chain}`)
 
 
 
@@ -134,7 +140,10 @@ app.post('/submit-certificate', (req, res) => {
         res.send({
             message: 'Certificate received and parsed successfully',
             cert: certDetails.raw,
-            publicKey: certDetails.publicKey
+            publicKey: certDetails.publicKey,
+            attestationDetails,
+            provisioningInfo,
+            revocationStatus
         });
 
     } catch (error) {
