@@ -64,18 +64,7 @@ function verifyRootCertificate(publicKey) {
         'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==';
 
         try {
-            // Create a hash object with the SHA-256 algorithm
-            const hash = crypto.createHash('sha256');
-
-            // Update the hash object with the public key
-            hash.update(publicKey);
-            
-            // Generate the fingerprint by digesting the hash object
-            const fingerprint = hash.digest('hex');
-            hash.update(googleRootKey);
-            const google = hash.digest('hex');
-
-            return fingerprint === google;
+            return publicKey === googleRootKey;
         } catch (error) {
             console.error('Failed to process public key:', error);
             return false;
