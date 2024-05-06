@@ -52,18 +52,21 @@ function loadCertificate(pemCert) {
 // Function to verify the root certificate
 function verifyRootPublicKey(certPem) {
     try {
-        // Convert the PEM formatted certificate to a forge certificate
         const cert = forge.pki.certificateFromPem(certPem);
-        console.log('STEP 1', cert); // Log the received PEM certificate
+        let publicKeyPem;
+        
+        // Check if the public key is RSA or EC
+        if (cert.publicKey.n && cert.publicKey.e) { // Simple check for RSA public key components
+            publicKeyPem = forge.pki.publicKeyToPem(cert.publicKey);
+        } else if (cert.publicKey.getPublicKey) { // ECDSA public keys might be handled like this
+            publicKeyPem = forge.pki.publicKeyToPem(cert.publicKey.getPublicKey());
+        } else {
+            throw new Error('Unsupported public key algorithm');
+        }
 
-        // Extract the public key from the certificate and convert to PEM format
-        const publicKeyPem = forge.pki.publicKeyToPem(cert.publicKey);
-        console.log('STEP 2', publicKeyPem); // Log the received PEM certificate
+        console.log('Public Key:', publicKeyPem);
 
-        // Normalize both PEM keys to remove header, footer, and whitespace for comparison
         const normalizePem = (pem) => pem.replace(/-----(BEGIN|END) PUBLIC KEY-----|\s/g, '');
-
-        // Compare normalized public keys
         return normalizePem(publicKeyPem) === normalizePem(GOOGLE_ROOT_KEY);
     } catch (error) {
         console.error('Error verifying root public key:', error);
