@@ -6,6 +6,7 @@ const fs = require('fs');
 const axios = require('axios');
 const CRL_URL = 'https://android.googleapis.com/attestation/status';
 const EC = require('elliptic').ec;
+const ec = new (require('elliptic').ec)('p256');  // Adjust the curve type based on your requirements
 const { pem2jwk } = require('pem-jwk');
 
 
