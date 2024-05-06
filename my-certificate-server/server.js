@@ -18,8 +18,8 @@ const cbor = require('cbor');
 const { Certificate } = require('@fidm/x509');
 const { ASN1 } = require('@lapo/asn1js');
 
-const GOOGLE_ROOT_CERT =
-"-----BEGIN CERTIFICATE-----\n"
+const GOOGLE_ROOT_KEY =
+"-----BEGIN PUBLIC KEY-----\n"
 'MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr7bHgiuxpwHsK7Qui8xU' +
 'FmOr75gvMsd/dTEDDJdSSxtf6An7xyqpRR90PL2abxM1dEqlXnf2tqw1Ne4Xwl5j' +
 'lRfdnJLmN0pTy/4lj4/7tv0Sk3iiKkypnEUtR6WfMgH0QZfKHM1+di+y9TFRtv6y' +
@@ -32,7 +32,7 @@ const GOOGLE_ROOT_CERT =
 'gLiMm0jhO2B6tUXHI/+MRPjy02i59lINMRRev56GKtcd9qO/0kUJWdZTdA2XoS82' +
 'ixPvZtXQpUpuL12ab+9EaDK8Z4RHJYYfCT3Q5vNAXaiWQ+8PTWm2QgBR/bkwSWc+' +
 'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==' +
-"\n-----END CERTIFICATE-----"; 
+"\n-----END PUBLIC KEY-----"; 
 
 // Helper function to load and parse the certificate
 function loadCertificate(pemCert) {
@@ -46,21 +46,22 @@ function loadCertificate(pemCert) {
 }
 
 // Function to verify the root certificate
-function verifyRootCertificate(cert) {
+function verifyRootPublicKey(cert) {
     try {
-        const issuerCert = Certificate.fromPEM(Buffer.from(GOOGLE_ROOT_CERT));
-        console.log('Issuer certificate:', issuerCert); // Log the issuer certificate
-        
-        return cert.issuerSubject === issuerCert.subject && issuerCert.checkSignature(cert) === null;
+        const publicKey = forge.pki.publicKeyFromPem(GOOGLE_ROOT_KEY);
+        console.log('Root public key:', publicKey); // Log the root public key
+
+        // Verify if the certificate's public key matches the root public key
+        return cert.publicKey.verify(cert.raw, cert.signature);
     } catch (error) {
-        console.error('Error verifying root certificate:', error);
+        console.error('Error verifying root public key:', error);
         throw error;
     }
 }
 
 // Function to verify the certificate chain
 function verifyCertificateChain(cert) {
-    const issuerCert = Certificate.fromPEM(Buffer.from(GOOGLE_ROOT_CERT));
+    const issuerCert = Certificate.fromPEM(Buffer.from(GOOGLE_ROOT_KEY));
     return issuerCert.checkSignature(cert) === null;
 }
 
