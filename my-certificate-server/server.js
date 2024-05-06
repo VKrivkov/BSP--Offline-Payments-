@@ -49,6 +49,23 @@ function loadCertificate(pemCert) {
     }
 }
 
+function convertECPublicKeyToPEM(publicKey) {
+    // Assuming publicKey is an instance of `@fidm/x509`'s PublicKey with EC type
+    const ecKey = ec.keyFromPublic({
+        x: publicKey.keyRaw.toString('hex').slice(2, 66),  // First half after sequence
+        y: publicKey.keyRaw.toString('hex').slice(66)      // Second half
+    });
+
+    const jwk = {
+        kty: "EC",
+        crv: "P-256",  // This should match the curve used by the certificate's key
+        x: Buffer.from(ecKey.getPublic().getX().toArray()).toString('base64'),
+        y: Buffer.from(ecKey.getPublic().getY().toArray()).toString('base64')
+    };
+
+    return jwk2pem(jwk);
+}
+
 // Function to verify the root certificate
 function verifyRootPublicKey(certPem) {
     try {
