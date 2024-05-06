@@ -6,6 +6,8 @@ const fs = require('fs');
 const axios = require('axios');
 const CRL_URL = 'https://android.googleapis.com/attestation/status';
 const EC = require('elliptic').ec;
+const { pem2jwk } = require('pem-jwk');
+
 
 
 const app = express();
@@ -21,7 +23,7 @@ const { Certificate } = require('@fidm/x509');
 const { ASN1 } = require('@lapo/asn1js');
 
 const GOOGLE_ROOT_KEY =
-//"-----BEGIN PUBLIC KEY-----\n" +
+"-----BEGIN PUBLIC KEY-----\n" +
 'MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr7bHgiuxpwHsK7Qui8xU' +
 'FmOr75gvMsd/dTEDDJdSSxtf6An7xyqpRR90PL2abxM1dEqlXnf2tqw1Ne4Xwl5j' +
 'lRfdnJLmN0pTy/4lj4/7tv0Sk3iiKkypnEUtR6WfMgH0QZfKHM1+di+y9TFRtv6y' +
@@ -33,8 +35,8 @@ const GOOGLE_ROOT_KEY =
 'Zrt3i5MIlCaY504LzSRiigHCzAPlHws+W0rB5N+er5/2pJKnfBSDiCiFAVtCLOZ7' +
 'gLiMm0jhO2B6tUXHI/+MRPjy02i59lINMRRev56GKtcd9qO/0kUJWdZTdA2XoS82' +
 'ixPvZtXQpUpuL12ab+9EaDK8Z4RHJYYfCT3Q5vNAXaiWQ+8PTWm2QgBR/bkwSWc+' +
-'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ=='; //+
-//"\n-----END PUBLIC KEY-----";
+'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==' +
+"\n-----END PUBLIC KEY-----";
 
 // Helper function to load and parse the certificate
 function loadCertificate(pemCert) {
@@ -52,10 +54,13 @@ function verifyRootPublicKey(cert) {
     try {
         const ec = new EC('p256');
 
-        // Ensure the public key is in the correct format. Assuming it needs to be a Buffer.
-        const publicKeyData = Buffer.from(GOOGLE_ROOT_KEY, 'base64'); // If your key is base64 encoded
+        // Convert PEM to JWK
+        const jwk = pem2jwk(GOOGLE_ROOT_KEY);
 
-        const publicKey = ec.keyFromPublic(publicKeyData, 'array'); // Change format if needed
+        // Convert JWK to hex format if necessary
+        const publicKeyHex = jwk.x + jwk.y; // This is a simplification, might require more precise handling
+
+        const publicKey = ec.keyFromPublic(publicKeyHex, 'hex');
 
         const signature = Buffer.from(cert.signature, 'base64');
         const data = Buffer.from(cert.raw, 'binary');
