@@ -50,28 +50,19 @@ function loadCertificate(pemCert) {
 }
 
 // Function to verify the root certificate
-function verifyRootPublicKey(pemPublicKey) {
+function verifyRootPublicKey(certPem, ) {
     try {
-        const ec = new EC('p256');
+        // Convert the PEM formatted certificate to a forge certificate
+        const cert = forge.pki.certificateFromPem(certPem);
 
-        // Convert the PEM public key to a format that the elliptic library can handle
-        const publicKey = crypto.createPublicKey({
-            key: pemPublicKey,
-            format: 'pem',
-            type: 'spki'
-        });
+        // Extract the public key from the certificate and convert to PEM format
+        const publicKeyPem = forge.pki.publicKeyToPem(cert.publicKey);
 
-        // Convert public key to DER format (binary)
-        const publicKeyDer = publicKey.export({ format: 'der', type: 'spki' });
+        // Normalize both PEM keys to remove header, footer, and whitespace for comparison
+        const normalizePem = (pem) => pem.replace(/-----(BEGIN|END) PUBLIC KEY-----|\s/g, '');
 
-        // Create a public key instance from the DER formatted key
-        const ellipticKey = ec.keyFromPublic(publicKeyDer, 'der');
-
-        // Use `ellipticKey` for whatever operations you need, such as verifying a signature
-        // Example: ellipticKey.verify(data, signature);
-
-        console.log('Public key loaded successfully:', ellipticKey);
-        return true;
+        // Compare normalized public keys
+        return normalizePem(publicKeyPem) === normalizePem(GOOGLE_ROOT_KEY);
     } catch (error) {
         console.error('Error verifying root public key:', error);
         throw error;
