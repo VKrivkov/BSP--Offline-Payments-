@@ -92,7 +92,7 @@ app.post('/submit-certificate', async (req, res) => {
         console.log('Received PEM certificate from request body:', pemCert); // Log the PEM certificate from request body
         const cert = loadCertificate(pemCert);
 
-        const rootValid = verifyRootPublicKey(cert.publicKey);
+        const rootValid = verifyRootPublicKey(cert);
         const chainValid = verifyCertificateChain(cert);
         const attestationDetails = parseAttestationExtension(cert);
 
