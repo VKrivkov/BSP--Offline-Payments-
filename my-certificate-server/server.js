@@ -63,16 +63,21 @@ function verifyRootCertificate(publicKey) {
         'ixPvZtXQpUpuL12ab+9EaDK8Z4RHJYYfCT3Q5vNAXaiWQ+8PTWm2QgBR/bkwSWc+' +
         'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==';
 
-    try {
-        const publicKeyForge = forge.pki.publicKeyFromPem(publicKey);
-
-        const fingerprint = forge.pki.getPublicKeyFingerprint(publicKeyForge, { encoding: 'hex', md: forge.md.sha256.create() });
-        
-        return fingerprint === googleRootKey;
-    } catch (error) {
-        console.error('Failed to process public key:', error);
-        return false;
-    }
+        try {
+            // Create a hash object with the SHA-256 algorithm
+            const hash = crypto.createHash('sha256');
+    
+            // Update the hash object with the public key
+            hash.update(publicKey);
+    
+            // Generate the fingerprint by digesting the hash object
+            const fingerprint = hash.digest('hex');
+    
+            return fingerprint === googleRootKey;
+        } catch (error) {
+            console.error('Failed to process public key:', error);
+            return false;
+        }
 }
 
 
