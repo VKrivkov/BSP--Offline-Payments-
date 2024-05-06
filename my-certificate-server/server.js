@@ -63,16 +63,18 @@ function verifyRootCertificate(publicKey) {
         'ixPvZtXQpUpuL12ab+9EaDK8Z4RHJYYfCT3Q5vNAXaiWQ+8PTWm2QgBR/bkwSWc+' +
         'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==';
 
-        try {
-            const rsaPublicKey = forge.pki.publicKeyToRSAPublicKey(publicKey);
-            const fingerprint = forge.pki.getPublicKeyFingerprint(rsaPublicKey, { encoding: 'hex', md: forge.md.sha256.create() });
-            
-            return fingerprint === googleRootKey;
-        } catch (error) {
-            console.error('Failed to process public key:', error);
-            return false;
-        }
+    try {
+        const publicKeyForge = forge.pki.publicKeyFromPem(publicKey);
+
+        const fingerprint = forge.pki.getPublicKeyFingerprint(publicKeyForge, { encoding: 'hex', md: forge.md.sha256.create() });
+        
+        return fingerprint === googleRootKey;
+    } catch (error) {
+        console.error('Failed to process public key:', error);
+        return false;
+    }
 }
+
 
 // Function to verify the chain of trust
 function verifyCertificateChain(chain) {
