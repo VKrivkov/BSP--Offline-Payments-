@@ -51,17 +51,17 @@ function loadCertificate(pemCert) {
 }
 
 function convertECPublicKeyToPEM(publicKey) {
-    // Assuming publicKey is an instance of `@fidm/x509`'s PublicKey with EC type
-    const ecKey = ec.keyFromPublic({
-        x: publicKey.keyRaw.toString('hex').slice(2, 66),  // First half after sequence
-        y: publicKey.keyRaw.toString('hex').slice(66)      // Second half
-    });
+    const ec = new EC('p256');  // Make sure the curve name is correct for your keys
 
+    // Convert the public key to a format that can be used to extract coordinates
+    const keyObject = ec.keyFromPublic(publicKey.keyRaw.toString('hex'), 'hex');
+
+    // Create JWK from the EC key parts
     const jwk = {
         kty: "EC",
-        crv: "P-256",  // This should match the curve used by the certificate's key
-        x: Buffer.from(ecKey.getPublic().getX().toArray()).toString('base64'),
-        y: Buffer.from(ecKey.getPublic().getY().toArray()).toString('base64')
+        crv: "P-256", // Ensure this matches the curve used by your public key
+        x: keyObject.getPublic().getX().toString('base64'),
+        y: keyObject.getPublic().getY().toString('base64')
     };
 
     return pem2jwk(jwk);
