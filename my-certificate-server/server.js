@@ -37,7 +37,12 @@ const GOOGLE_ROOT_CERT =
 // Helper function to load and parse the certificate
 function loadCertificate(pemCert) {
     console.log('Received PEM certificate:', pemCert); // Log the received PEM certificate
-    return Certificate.fromPEM(Buffer.from(pemCert));
+    try {
+        return Certificate.fromPEM(Buffer.from(pemCert));
+    } catch (error) {
+        console.error('Error parsing PEM certificate:', error);
+        throw error;
+    }
 }
 
 // Function to verify the root certificate
