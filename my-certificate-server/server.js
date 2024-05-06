@@ -49,7 +49,7 @@ function parseCertificate(pemCert) {
 }
 
 // Function to verify the trustworthiness of the root public certificate
-function verifyRootCertificate(rootCertificate) {
+function verifyRootCertificate(certDetails) {
     // Google Hardware Attestation Root certificate public key
     const googleRootKey = 'MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr7bHgiuxpwHsK7Qui8xU' +
         'FmOr75gvMsd/dTEDDJdSSxtf6An7xyqpRR90PL2abxM1dEqlXnf2tqw1Ne4Xwl5j' +
@@ -64,8 +64,15 @@ function verifyRootCertificate(rootCertificate) {
         'ixPvZtXQpUpuL12ab+9EaDK8Z4RHJYYfCT3Q5vNAXaiWQ+8PTWm2QgBR/bkwSWc+' +
         'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==';
 
-    const rootKey = forge.pki.getPublicKeyFingerprint(rootCertificate.publicKey, { encoding: 'hex' });
-    return googleRootKey === rootKey;
+        try {
+            const forgeCert = forge.pki.certificateFromPem(certDetails.publicKey);
+            const publicKey = forgeCert.publicKey;
+            const fingerprint = forge.pki.getPublicKeyFingerprint(publicKey, { encoding: 'hex', md: forge.md.sha1.create() });
+            return fingerprint === googleRootKey;
+        } catch (error) {
+            console.error('Failed to process public key:', error);
+            return false;
+        }
 }
 
 // Function to verify the chain of trust
