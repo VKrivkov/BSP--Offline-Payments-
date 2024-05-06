@@ -64,7 +64,7 @@ function convertECPublicKeyToPEM(publicKey) {
         y: Buffer.from(ecKey.getPublic().getY().toArray()).toString('base64')
     };
 
-    return jwk2pem(jwk);
+    return pem2jwk(jwk);
 }
 
 // Function to verify the root certificate
