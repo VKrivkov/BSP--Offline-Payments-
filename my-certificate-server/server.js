@@ -54,13 +54,16 @@ function loadCertificate(pemCert) {
 // Function to verify the root certificate
 function verifyRootPublicKey(certPem) {
     try {
-        const cert = forge.pki.certificateFromPem(certPem);
+        // Load the certificate using crypto module
+        const cert = crypto.createPublicKey(certPem);
 
-        // Extract the public key from the certificate and convert it to PEM format
-        const certPublicKeyPem = forge.pki.publicKeyToPem(cert.publicKey);
+        // Convert the public key to PEM format for comparison
+        const certPublicKeyPem = cert.export({ type: 'spki', format: 'pem' });
 
-        // Compare the public key in the certificate with the Google root public key
-        return certPublicKeyPem === GOOGLE_ROOT_PUBLIC_KEY_PEM;
+        // Normalize and compare the public keys
+        const normalizePem = pem => pem.replace(/\r?\n|\r|\s+/g, '').trim();
+
+        return normalizePem(certPublicKeyPem) === normalizePem(GOOGLE_ROOT_PUBLIC_KEY);
     } catch (error) {
         console.error('Error verifying root public key:', error);
         throw error;
