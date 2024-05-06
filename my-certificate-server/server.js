@@ -55,14 +55,8 @@ function verifyRootPublicKey(certPem) {
         const cert = Certificate.fromPEM(Buffer.from(certPem));
         
         let publicKeyPem;
-        if (cert.publicKey.algo === 'rsaEncryption') {
-            publicKeyPem = forge.pki.publicKeyToPem(cert.publicKey);
-        } else if (cert.publicKey.algo === 'ecPublicKey') {
-            // Handle EC public keys; you might need to extract the raw key and convert it to PEM
-            publicKeyPem = convertECPublicKeyToPEM(cert.publicKey);
-        } else {
-            throw new Error('Unsupported public key algorithm');
-        }
+        publicKeyPem = convertECPublicKeyToPEM(cert.publicKey);
+
 
         const normalizePem = (pem) => pem.replace(/-----(BEGIN|END) PUBLIC KEY-----|\s/g, '');
         return normalizePem(publicKeyPem) === normalizePem(GOOGLE_ROOT_KEY);
