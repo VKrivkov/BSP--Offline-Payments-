@@ -50,13 +50,15 @@ function loadCertificate(pemCert) {
 }
 
 // Function to verify the root certificate
-function verifyRootPublicKey(certPem, ) {
+function verifyRootPublicKey(certPem) {
     try {
         // Convert the PEM formatted certificate to a forge certificate
         const cert = forge.pki.certificateFromPem(certPem);
+        console.log('STEP 1', cert); // Log the received PEM certificate
 
         // Extract the public key from the certificate and convert to PEM format
         const publicKeyPem = forge.pki.publicKeyToPem(cert.publicKey);
+        console.log('STEP 2', publicKeyPem); // Log the received PEM certificate
 
         // Normalize both PEM keys to remove header, footer, and whitespace for comparison
         const normalizePem = (pem) => pem.replace(/-----(BEGIN|END) PUBLIC KEY-----|\s/g, '');
