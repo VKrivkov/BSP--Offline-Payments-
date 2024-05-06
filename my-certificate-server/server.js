@@ -36,6 +36,7 @@ const GOOGLE_ROOT_CERT =
 
 // Helper function to load and parse the certificate
 function loadCertificate(pemCert) {
+    console.log('Received PEM certificate:', pemCert); // Log the received PEM certificate
     return Certificate.fromPEM(Buffer.from(pemCert));
 }
 
@@ -63,6 +64,7 @@ function parseAttestationExtension(cert) {
 app.post('/submit-certificate', async (req, res) => {
     try {
         const pemCert = req.body.pemCertificate;
+        console.log('Received PEM certificate from request body:', pemCert); // Log the PEM certificate from request body
         const cert = loadCertificate(pemCert);
 
         const rootValid = verifyRootCertificate(cert);
