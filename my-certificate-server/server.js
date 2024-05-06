@@ -47,9 +47,15 @@ function loadCertificate(pemCert) {
 
 // Function to verify the root certificate
 function verifyRootCertificate(cert) {
-    const issuerCert = Certificate.fromPEM(Buffer.from(GOOGLE_ROOT_CERT));
-    console.log('Issuer certificate:', issuerCert); // Log the issuer certificate
-    return cert.issuerSubject === issuerCert.subject && issuerCert.checkSignature(cert) === null;
+    try {
+        const issuerCert = Certificate.fromPEM(Buffer.from(GOOGLE_ROOT_CERT));
+        console.log('Issuer certificate:', issuerCert); // Log the issuer certificate
+        
+        return cert.issuerSubject === issuerCert.subject && issuerCert.checkSignature(cert) === null;
+    } catch (error) {
+        console.error('Error verifying root certificate:', error);
+        throw error;
+    }
 }
 
 // Function to verify the certificate chain
