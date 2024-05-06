@@ -5,6 +5,8 @@ const forge = require('node-forge');
 const fs = require('fs');
 const axios = require('axios');
 const CRL_URL = 'https://android.googleapis.com/attestation/status';
+const EC = require('elliptic').ec;
+
 
 const app = express();
 const port = 3456;
@@ -49,10 +51,19 @@ function loadCertificate(pemCert) {
 function verifyRootPublicKey(cert) {
     try {
         const publicKey = forge.pki.publicKeyFromPem(GOOGLE_ROOT_KEY);
-        console.log('Root public key:', publicKey); // Log the root public key
+       // Specify the algorithm as "ecdsa-with-SHA256" (ECDSA with SHA-256)
+        const algorithm = 'ecdsa-with-SHA256';
+
+        // Create an EC instance
+        const ec = new EC('p256'); // Assuming the key is generated with the p256 curve
 
         // Verify if the certificate's public key matches the root public key
-        return cert.publicKey.verify(cert.raw, cert.signature);
+        const key = ec.keyFromPublic(publicKey, 'pem');
+        const signature = Buffer.from(cert.signature, 'base64'); // Assuming cert.signature contains the signature in base64 format
+        const data = Buffer.from(cert.raw, 'binary'); // Assuming cert.raw contains the raw certificate data
+        const verified = key.verify(data, signature);
+        console.log('Certificate verification result:', verified);
+        return verified;
     } catch (error) {
         console.error('Error verifying root public key:', error);
         throw error;
