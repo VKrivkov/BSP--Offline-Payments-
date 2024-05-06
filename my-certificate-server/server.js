@@ -54,15 +54,16 @@ function verifyRootPublicKey(cert) {
     try {
         const ec = new EC('p256');
 
-        // Decode PEM format to a usable public key format
+        // Decode PEM format to extract the actual key data
         const pki = forge.pki;
         const publicKeyFromPem = pki.publicKeyFromPem(GOOGLE_ROOT_KEY);
-        // Extract the public key as a binary DER encoded data
+        // Convert the public key to ASN.1/DER format which is binary
         const publicKeyDer = forge.asn1.toDer(pki.publicKeyToAsn1(publicKeyFromPem)).getBytes();
-        // Convert binary DER to hexadecimal
-        const publicKeyHex = Buffer.from(publicKeyDer, 'binary').toString('hex');
+        // Convert the binary DER format to a Buffer
+        const publicKeyBuffer = Buffer.from(publicKeyDer, 'binary');
 
-        const publicKey = ec.keyFromPublic(publicKeyHex, 'hex');
+        // Now convert this buffer to an uncompressed point format that elliptic can understand
+        const publicKey = ec.keyFromPublic(publicKeyBuffer, 'hex');
 
         const signature = Buffer.from(cert.signature, 'base64');
         const data = Buffer.from(cert.raw, 'binary');
