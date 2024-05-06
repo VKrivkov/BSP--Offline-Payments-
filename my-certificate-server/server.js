@@ -49,7 +49,7 @@ function parseCertificate(pemCert) {
 }
 
 // Function to verify the trustworthiness of the root public certificate
-function verifyRootCertificate(certDetails) {
+function verifyRootCertificate(publicKey) {
     // Google Hardware Attestation Root certificate public key
     const googleRootKey = 'MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAr7bHgiuxpwHsK7Qui8xU' +
         'FmOr75gvMsd/dTEDDJdSSxtf6An7xyqpRR90PL2abxM1dEqlXnf2tqw1Ne4Xwl5j' +
@@ -136,7 +136,7 @@ app.post('/submit-certificate', async (req, res) => {
         const attestationDetails = parseAttestationExtension(certDetails.raw);
         const provisioningInfo = parseProvisioningExtension(certDetails.raw);
         const revocationStatus = await checkRevocation(certDetails.raw);
-        const root = verifyRootCertificate(publicKey);
+        const root = verifyRootCertificate(certDetails.publicKey);
         const chain = verifyCertificateChain(certDetails.raw);
 
         // Logging for demonstration
