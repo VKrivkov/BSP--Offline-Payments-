@@ -55,15 +55,17 @@ function loadCertificate(pemCert) {
 function verifyRootPublicKey(certPem) {
     try {
         // Load the certificate using crypto module
-        const cert = crypto.createPublicKey(certPem);
+         // Create a certificate object from the PEM string
+         const cert = new crypto.X509Certificate(certPem);
 
-        // Convert the public key to PEM format for comparison
-        const certPublicKeyPem = cert.export({ type: 'spki', format: 'pem' });
-
-        // Normalize and compare the public keys
-        const normalizePem = pem => pem.replace(/\r?\n|\r|\s+/g, '').trim();
-
-        return normalizePem(certPublicKeyPem) === normalizePem(GOOGLE_ROOT_KEY );
+         // Extract the public key in PEM format
+         const certPublicKeyPem = cert.publicKey.export({ type: 'spki', format: 'pem' });
+ 
+         // Function to normalize PEM strings for accurate comparison
+         const normalizePem = pem => pem.replace(/\r?\n|\r|\s+/g, '').trim();
+ 
+         // Compare normalized PEM strings
+         return normalizePem(certPublicKeyPem) === normalizePem(googleRootPublicKeyPem);
     } catch (error) {
         console.error('Error verifying root public key:', error);
         throw error;
