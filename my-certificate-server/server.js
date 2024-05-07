@@ -89,6 +89,7 @@ function verifyCertificateChain(certificates) {
             const isVerified = crypto.createVerify('SHA256')
                 .update(previousCert)
                 .verify(cert, previousCert.signature);
+                console.log("Iterations:", i);
             if (!isVerified) {
                 return false;
             }
