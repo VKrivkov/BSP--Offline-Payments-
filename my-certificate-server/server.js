@@ -59,6 +59,8 @@ function verifyRootPublicKey(certPem) {
         console.log("Public Key: ", certPublicKey);
 
         const publicKeyBuffer = Buffer.from(certPublicKey);
+        console.log("Public BUFFER: ", publicKeyBuffer);
+
         const ec = crypto.createPublicKey({
         key: {
             type: 'spki',
