@@ -40,10 +40,10 @@ const GOOGLE_ROOT_KEY =
 "\n-----END PUBLIC KEY-----";
 
 // Helper function to load and parse the certificate
-// function loadCertificate(pemCert) {
-//     //console.log('Received PEM certificate:', pemCert);
+// function loadCertificate(base64Cert) {
+//     //console.log('Received PEM certificate:', base64Cert);
 //     try {
-//         return Certificate.fromPEM(Buffer.from(pemCert));
+//         return Certificate.fromPEM(Buffer.from(base64Cert));
 //     } catch (error) {
 //         console.error('Error parsing PEM certificate:', error);
 //         throw error;
@@ -51,25 +51,25 @@ const GOOGLE_ROOT_KEY =
 // }
 
 
-function parseCertificateChain(pemChain) {
-    // Remove the BEGIN and END tags and newlines
-    const base64String = pemChain.replace('-----BEGIN CERTIFICATE-----', '')
-                                 .replace('-----END CERTIFICATE-----', '')
-                                 .replace(/\n/g, '');
-    // Decode from Base64 to binary
-    const binaryDerString = forge.util.decode64(base64String);
+function parseCertificateChain(chain) {
+     try {
+        // Decode the Base64 string to a binary Buffer
+        const binaryCert = Buffer.from(base64String, 'base64');
 
-    // Parse the binary string as ASN.1
-    const asn1 = forge.asn1.fromDer(binaryDerString);
+        // Convert the binary Buffer to a binary string
+        const binaryString = binaryCert.toString('binary');
 
-    // Assuming the top-level structure is a sequence of certificates
-    // This part is highly dependent on the actual structure of your chain
-    const certificates = asn1.value.map(entry => {
-        const certDer = forge.asn1.toDer(entry).getBytes();
-        return forge.pki.certificateFromAsn1(forge.asn1.fromDer(certDer));
-    });
+        // Convert binary string to forge ASN.1 object
+        const asn1Cert = forge.asn1.fromDer(binaryString);
 
-    return certificates.map(cert => forge.pki.certificateToPem(cert));
+        // Convert ASN.1 object to a forge certificate object
+        const certificate = forge.pki.certificateFromAsn1(asn1Cert);
+
+        return certificate;
+    } catch (error) {
+        console.error('Error converting Base64 to certificate:', error);
+        throw error;
+    }
 }
 
 
@@ -147,11 +147,11 @@ function parseAttestationExtension(cert) {
 // Function to handle incoming certificates
 app.post('/submit-certificate', async (req, res) => {
     try {
-        const pemCert = req.body.pemCertificate.trim();
-        console.log('Received PEM certificate chain from request body:', pemCert);
-        const cert = parseCertificateChain(pemCert);
+        const base64Cert = req.body.base64Certificate.trim();
+        console.log('Received Base64 X.509 certificate chain from request body:', base64Cert);
+        const cert = parseCertificateChain(base64Cert);
 
-        //const rootValid = verifyRootPublicKey(pemCert);
+        //const rootValid = verifyRootPublicKey(base64Cert);
         const chainValid = verifyCertificateChain(cert);
         const attestationDetails = parseAttestationExtension(cert);
 
