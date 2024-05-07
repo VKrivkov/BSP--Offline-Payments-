@@ -1,13 +1,11 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
-const forge = require('node-forge');
 const fs = require('fs');
 const axios = require('axios');
 const CRL_URL = 'https://android.googleapis.com/attestation/status';
 const EC = require('elliptic').ec;
 const ec = new (require('elliptic').ec)('p256');  // Adjust the curve type based on your requirements
-const { pem2jwk } = require('pem-jwk');
 
 
 
@@ -16,8 +14,6 @@ const port = 3456;
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
-
-const asn1 = require('asn1.js');
 const cbor = require('cbor');
 
 const { Certificate } = require('@fidm/x509');
@@ -39,39 +35,38 @@ const GOOGLE_ROOT_KEY =
 'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==' +
 "\n-----END PUBLIC KEY-----";
 
-// Helper function to load and parse the certificate
-// function loadCertificate(base64Cert) {
-//     //console.log('Received PEM certificate:', base64Cert);
-//     try {
-//         return Certificate.fromPEM(Buffer.from(base64Cert));
-//     } catch (error) {
-//         console.error('Error parsing PEM certificate:', error);
-//         throw error;
-//     }
-// }
 
 
 function parseCertificateChain(chain) {
-     try {
+    try {
         // Decode the Base64 string to a binary Buffer
         const binaryCert = Buffer.from(chain, 'base64');
-
-        // Convert the binary Buffer to a binary string
-        const binaryString = binaryCert.toString('binary');
-
-        // Convert binary string to forge ASN.1 object
-        const asn1Cert = forge.asn1.fromDer(binaryString);
-
-        // Convert ASN.1 object to a forge certificate object
-        const certificate = forge.pki.certificateFromAsn1(asn1Cert);
-
-        console.log("CertificateCHAIN: ",certificate);
+    
+        // Parse the certificate using @fidm/x509
+        const certificate = Certificate.fromDER(binaryCert);
+    
+        // Display certificate details
+        console.log("CERTIFICATE CHAIN: ", certificate);
+    
+        // Checking if the public key is ECC
+        if (certificate.publicKey.algo === 'ecPublicKey') {
+          console.log("Public Key Type: ECC");
+          const ec = new elliptic.ec(certificate.publicKey.namedCurve);
+    
+          // Retrieve public key details
+          const pubKey = ec.keyFromPublic(certificate.publicKey.data);
+    
+          console.log("Public Key X coordinate: ", pubKey.getPublic().getX().toString(16));
+          console.log("Public Key Y coordinate: ", pubKey.getPublic().getY().toString(16));
+        } else {
+          console.log("Non-ECC public key found, function expects ECC keys.");
+        }
         return certificate;
-    } catch (error) {
+      } catch (error) {
         console.error('Error converting Base64 to certificate:', error);
         throw error;
+      }
     }
-}
 
 
 // Function to verify the root certificate  RETURNING FALSE
