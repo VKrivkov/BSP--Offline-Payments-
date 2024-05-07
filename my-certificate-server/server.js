@@ -54,7 +54,7 @@ const GOOGLE_ROOT_KEY =
 function parseCertificateChain(chain) {
      try {
         // Decode the Base64 string to a binary Buffer
-        const binaryCert = Buffer.from(base64String, 'base64');
+        const binaryCert = Buffer.from(chain, 'base64');
 
         // Convert the binary Buffer to a binary string
         const binaryString = binaryCert.toString('binary');
@@ -65,6 +65,7 @@ function parseCertificateChain(chain) {
         // Convert ASN.1 object to a forge certificate object
         const certificate = forge.pki.certificateFromAsn1(asn1Cert);
 
+        console.log("CertificateCHAIN: ",certificate);
         return certificate;
     } catch (error) {
         console.error('Error converting Base64 to certificate:', error);
