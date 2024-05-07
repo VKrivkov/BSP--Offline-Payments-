@@ -40,15 +40,38 @@ const GOOGLE_ROOT_KEY =
 "\n-----END PUBLIC KEY-----";
 
 // Helper function to load and parse the certificate
-function loadCertificate(pemCert) {
-    //console.log('Received PEM certificate:', pemCert);
-    try {
-        return Certificate.fromPEM(Buffer.from(pemCert));
-    } catch (error) {
-        console.error('Error parsing PEM certificate:', error);
-        throw error;
-    }
+// function loadCertificate(pemCert) {
+//     //console.log('Received PEM certificate:', pemCert);
+//     try {
+//         return Certificate.fromPEM(Buffer.from(pemCert));
+//     } catch (error) {
+//         console.error('Error parsing PEM certificate:', error);
+//         throw error;
+//     }
+// }
+
+
+function parseCertificateChain(pemChain) {
+    // Remove the BEGIN and END tags and newlines
+    const base64String = pemChain.replace('-----BEGIN CERTIFICATE-----', '')
+                                 .replace('-----END CERTIFICATE-----', '')
+                                 .replace(/\n/g, '');
+    // Decode from Base64 to binary
+    const binaryDerString = forge.util.decode64(base64String);
+
+    // Parse the binary string as ASN.1
+    const asn1 = forge.asn1.fromDer(binaryDerString);
+
+    // Assuming the top-level structure is a sequence of certificates
+    // This part is highly dependent on the actual structure of your chain
+    const certificates = asn1.value.map(entry => {
+        const certDer = forge.asn1.toDer(entry).getBytes();
+        return forge.pki.certificateFromAsn1(forge.asn1.fromDer(certDer));
+    });
+
+    return certificates.map(cert => forge.pki.certificateToPem(cert));
 }
+
 
 // Function to verify the root certificate  RETURNING FALSE
 function verifyRootPublicKey(certPem) {
@@ -125,8 +148,8 @@ function parseAttestationExtension(cert) {
 app.post('/submit-certificate', async (req, res) => {
     try {
         const pemCert = req.body.pemCertificate.trim();
-        console.log('Received PEM certificate from request body:', pemCert);
-        const cert = loadCertificate(pemCert);
+        console.log('Received PEM certificate chain from request body:', pemCert);
+        const cert = parseCertificateChain(pemCert);
 
         //const rootValid = verifyRootPublicKey(pemCert);
         const chainValid = verifyCertificateChain(cert);
