@@ -41,7 +41,7 @@ const GOOGLE_ROOT_KEY =
 
 // Helper function to load and parse the certificate
 function loadCertificate(pemCert) {
-    console.log('Received PEM certificate:', pemCert); // Log the received PEM certificate
+    //console.log('Received PEM certificate:', pemCert);
     try {
         return Certificate.fromPEM(Buffer.from(pemCert));
     } catch (error) {
@@ -50,18 +50,14 @@ function loadCertificate(pemCert) {
     }
 }
 
-// Function to verify the root certificate
+// Function to verify the root certificate  RETURNING FALSE
 function verifyRootPublicKey(certPem) {
     try {
-        // Load the certificate using crypto module
-         // Create a certificate object from the PEM string
-         const cert = loadCertificate(certPem)
+        const cert = loadCertificate(certPem)
 
-         // Extract the public key in PEM format
-         const certPublicKeyPem = cert.publicKey;
- 
-         // Compare normalized PEM strings
-         return certPublicKeyPem === GOOGLE_ROOT_KEY;
+        const certPublicKeyPem = cert.publicKey;
+        console.log("Public Key: ", certPublicKeyPem);
+        return certPublicKeyPem === GOOGLE_ROOT_KEY;
     } catch (error) {
         console.error('Error verifying root public key:', error);
         throw error;
@@ -98,7 +94,7 @@ function parseAttestationExtension(cert) {
 app.post('/submit-certificate', async (req, res) => {
     try {
         const pemCert = req.body.pemCertificate.trim();
-        console.log('Received PEM certificate from request body:', pemCert); // Log the PEM certificate from request body
+        //console.log('Received PEM certificate from request body:', pemCert);
         const cert = loadCertificate(pemCert);
 
         const rootValid = verifyRootPublicKey(pemCert);
