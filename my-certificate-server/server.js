@@ -148,7 +148,7 @@ function parseAttestationExtension(cert) {
 // Function to handle incoming certificates
 app.post('/submit-certificate', async (req, res) => {
     try {
-        const base64Cert = req.body.base64Certificate.trim();
+        const base64Cert = req.body.CertificateChain.trim();
         console.log('Received Base64 X.509 certificate chain from request body:', base64Cert);
         const cert = parseCertificateChain(base64Cert);
 
