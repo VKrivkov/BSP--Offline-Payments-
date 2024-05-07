@@ -58,21 +58,11 @@ function verifyRootPublicKey(certPem) {
         const certPublicKey = cert.publicKey;
         console.log("Public Key: ", certPublicKey);
 
-        const publicKeyBuffer = Buffer.from(certPublicKey);
-        console.log("Public BUFFER: ", publicKeyBuffer);
-
-        const ec = crypto.createPublicKey({
-        key: {
-            type: 'spki',
-            format: 'der',
-            data: Buffer.concat([
-            Buffer.from('3059301306072a8648ce3d020106082a8648ce3d030107034200', 'hex'), // this is the prefix for EC public key in DER format
-            publicKeyBuffer
-            ])
-        },
-        format: 'der'
-        });
-        const publicKeyPEM = ec.export({ type: 'spki', format: 'pem' });
+        const publicKeyPEM = certPublicKey.export({
+            type: 'spki', // Standard Public Key Infrastructure format to export the key
+            format: 'pem' // Export format
+          });
+          
         console.log("Public Key in PEM: ", publicKeyPEM);
         return certPublicKeyPem === GOOGLE_ROOT_KEY;
     } catch (error) {
