@@ -83,13 +83,14 @@ function verifyRootPublicKey(certPem) {
 
 function verifyCertificateChain(certificates) {
     try {
+        console.log("Length:", certificates.length);
         let previousCert = certificates[0];
         for (let i = 1; i < certificates.length; i++) {
             const cert = certificates[i];
             const isVerified = crypto.createVerify('SHA256')
                 .update(previousCert)
                 .verify(cert, previousCert.signature);
-                console.log("Iterations:", i);
+            console.log("Iterations:", i);
             if (!isVerified) {
                 return false;
             }
