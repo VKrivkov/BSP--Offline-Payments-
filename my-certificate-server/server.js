@@ -81,7 +81,7 @@ function verifyRootPublicKey(certPem) {
     }
 }
 
-function verifyCertificateChain(chain) {
+function verifyCertificateChain(certificates) {
     try {
         let previousCert = certificates[0];
         for (let i = 1; i < certificates.length; i++) {
