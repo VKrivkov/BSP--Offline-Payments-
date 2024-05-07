@@ -82,21 +82,33 @@ function verifyRootPublicKey(certPem) {
 }
 
 function verifyCertificateChain(chain) {
-    for (let i = 0; i < chain.length - 1; i++) {
-        const currentCert = chain[i];
-        const nextCert = chain[i + 1];
-
-        // Verify that the current certificate signs the next certificate
-        const verified = forge.pki.verifyCertificateChain({
-            caStore: [currentCert],
-            chain: [nextCert]
-        });
-
-        if (!verified) {
-            return false;
+    try {
+        let previousCert = certificates[0];
+        for (let i = 1; i < certificates.length; i++) {
+            const cert = certificates[i];
+            const isVerified = crypto.createVerify('SHA256')
+                .update(previousCert)
+                .verify(cert, previousCert.signature);
+            if (!isVerified) {
+                return false;
+            }
+            previousCert = cert;
         }
+        // Check root certificate (self-signed)
+        const rootCert = certificates[certificates.length - 1];
+        const isVerifiedRoot =  crypto.createVerify('SHA256')
+            .update(rootCert)
+            .verify(rootCert.publicKey, rootCert.signature);
+        console.log("Is root certificate verified ", isVerifiedRoot);
+
+        var rootKey = verifyRootPublicKey(rootCert);
+        console.log("Is root key verified ", rootKey);
+
+        return isVerifiedRoot && rootKey;
+    } catch (error) {
+        console.error('Verification failed:', error);
+        return false;
     }
-    return true;
 }
 
 // Parse Key Attestation Extension
@@ -111,10 +123,10 @@ function parseAttestationExtension(cert) {
 app.post('/submit-certificate', async (req, res) => {
     try {
         const pemCert = req.body.pemCertificate.trim();
-        //console.log('Received PEM certificate from request body:', pemCert);
+        console.log('Received PEM certificate from request body:', pemCert);
         const cert = loadCertificate(pemCert);
 
-        const rootValid = verifyRootPublicKey(pemCert);
+        //const rootValid = verifyRootPublicKey(pemCert);
         const chainValid = verifyCertificateChain(cert);
         const attestationDetails = parseAttestationExtension(cert);
 
