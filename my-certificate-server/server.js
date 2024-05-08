@@ -108,7 +108,7 @@ function verifyCertificateChain(certificates) {
 
 function verifyRootPublicKey(publicKey) {
     console.log(publicKey);
-    return publicKey === GOOGLE_ROOT_KEY;
+    return publicKey == GOOGLE_ROOT_KEY;
 }
 
 // Parse Key Attestation Extension
