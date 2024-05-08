@@ -103,6 +103,11 @@ function verifyCertificateChain(certificates) {
 
 function verifyRootPublicKey(publicKey) {
     try {
+        const publicKey = crypto.createPublicKey({
+            key: rawPublicKeyData,
+            format: 'der',
+            type: 'spki'
+        });
         const certPublicKeyPem = publicKey.export({ type: 'spki', format: 'pem' });
 
         return certPublicKeyPem === GOOGLE_ROOT_PUBLIC_KEY_PEM;
