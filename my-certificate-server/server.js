@@ -39,12 +39,8 @@ const GOOGLE_ROOT_KEY =
 
 function parseCertificateChain(chain) {
     try {
-           // Decode the Base64 string to a binary Buffer
-           const pemFormatted = Buffer.from(chain, 'base64').toString('utf8');
-           console.log("PEM Formatted Chain: ", pemFormatted);
-   
            // Split the certificates if the chain contains multiple
-           const certs = pemFormatted.split('-----END CERTIFICATE-----\n').map(cert => cert + '-----END CERTIFICATE-----\n').slice(0, -1);
+           const certs = chain.split('-----END CERTIFICATE-----\n').map(cert => cert + '-----END CERTIFICATE-----\n').slice(0, -1);
            console.log("Individual Certificates: ", certs.length);
 
            for(i=0; i<certs.length; i++){
