@@ -101,29 +101,17 @@ function verifyCertificateChain(certificates) {
 }
 
 
-function bufferToPem(publicKey) {
+function verifyRootPublicKey(publicKey) {
+    try {
+        const certPublicKeyPem = publicKey.export({ type: 'spki', format: 'pem' });
 
-    
-    let publicKeyBuffer = Buffer.from(publicKey, 'hex');;
-    
-    console.log("PUBLIC KEY BUFFER: ", publicKeyBuffer);
+        return certPublicKeyPem === GOOGLE_ROOT_PUBLIC_KEY_PEM;
 
-    // Create a SPKI (Subject Public Key Info) structure which is needed for PEM
-    const spki = new crypto.X509PublicKey({
-      key: publicKeyBuffer,
-      format: 'der',
-      type: 'spki'
-    });
-  
-    // Convert the SPKI structure to PEM format
-    const pemKey = spki.export({
-      type: 'spki',
-      format: 'pem'
-    });
-  
-    return pemKey;
-  }
-
+    } catch (error) {
+        console.error('Error verifying root public key:', error);
+        throw error;
+    }
+}
 
 // Parse Key Attestation Extension
 function parseAttestationExtension(cert) {
@@ -146,8 +134,8 @@ app.post('/submit-certificate', async (req, res) => {
         const RootCert = cert[cert.length - 1];
         console.log("KEY RAW DATA: ", RootCert.publicKey);
 
-        const pemRPK = bufferToPem(RootCert.publicKey);
-        console.log("KEY PEM DATA: ", pemRPK);
+        console.log("Root PK verified: ", verifyRootPublicKey(RootCert.publicKey));
+
 
         res.send({
             message: 'Certificate processed successfully',
