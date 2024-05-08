@@ -101,7 +101,7 @@ function verifyCertificateChain(certificates) {
 }
 
 
-function verifyRootPublicKey(publicKey) {
+function verifyRootPublicKey(rawPublicKeyData) {
     try {
         const publicKey = crypto.createPublicKey({
             key: rawPublicKeyData,
