@@ -102,7 +102,7 @@ function verifyCertificateChain(certificates) {
 
 
 function bufferToPem(publicKeyBuffer) {
-ì    // Base64 encode the raw public key data
+    // Base64 encode the raw public key data
     const base64PublicKey = publicKeyBuffer.publicKey.toString('base64');
   
     // Format the base64 string with line breaks and the appropriate headers and footers
