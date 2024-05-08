@@ -102,7 +102,8 @@ function verifyCertificateChain(certificates) {
 
 
 function verifyRootPublicKey(publicKey) {
-    return publicKey === GOOGLE_ROOT_PUBLIC_KEY_PEM;
+    console.log(publicKey);
+    return publicKey === GOOGLE_ROOT_KEY;
 }
 
 // Parse Key Attestation Extension
