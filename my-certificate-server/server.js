@@ -101,7 +101,7 @@ function verifyCertificateChain(certificates) {
 }
 
 
-function bufferToPem(publicKeyBuffer) {
+function bufferToPem(publicKey) {
     if (!publicKey || !publicKey.publicKey) {
       throw new Error('Invalid public key data');
     }
@@ -133,7 +133,7 @@ function bufferToPem(publicKeyBuffer) {
     return pemKey;
   }
 
-  
+
 // Parse Key Attestation Extension
 function parseAttestationExtension(cert) {
     const extension = cert.extensions.find(ext => ext.oid === '1.3.6.1.4.1.11129.2.1.17');
