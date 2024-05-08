@@ -133,11 +133,11 @@ app.post('/submit-certificate', async (req, res) => {
         //const rootValid = verifyRootPublicKey(base64Cert);
         const chainValid = verifyCertificateChain(cert);
         //const attestationDetails = parseAttestationExtension(cert);
-        const RPK = cert[cert.length - 1];
-        console.log("KEY RAW DATA: ", RPK);
+        const RootCert = cert[cert.length - 1];
+        console.log("KEY RAW DATA: ", RootCert.publicKey);
 
-        const pemRPK = bufferToPem(RPK);
-        console.log("KEY RAW DATA: ", pemRPK);
+        const pemRPK = bufferToPem(RootCert.publicKey);
+        console.log("KEY PEM DATA: ", pemRPK);
 
         res.send({
             message: 'Certificate processed successfully',
