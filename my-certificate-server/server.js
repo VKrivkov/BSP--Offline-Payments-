@@ -66,8 +66,8 @@ function parseCertificateChain(chain) {
             let isChainValid = true;
     
             for (let i = 0; i < certificates.length - 1; i++) {
-                const currentCert = certificates[i];
-                const issuerCert = certificates[i + 1];
+                const issuerCert = certificates[i];
+                const currentCert = certificates[i + 1];
     
                 // Use the issuer's public key to verify the current certificate
                 const issuerPublicKey = crypto.createPublicKey({
