@@ -35,27 +35,32 @@ const GOOGLE_ROOT_KEY =
 "\n-----END PUBLIC KEY-----";
 
 
-//WORKS
 function parseCertificateChain(chain) {
     try {
-           // Split the certificates if the chain contains multiple
-           const certs = chain.split('-----END CERTIFICATE-----\n').map(cert => cert + '-----END CERTIFICATE-----\n').slice(0, -1);
-           console.log("Individual Certificates: ", certs.length);
+        // Ensure chain ends with a newline to catch the last certificate
+        chain = chain.trim() + '\n';
 
-           for(i=0; i<certs.length; i++){
-            console.log("Individual Certificates: ", certs[i]);
-           }
-   
-           // Parse each certificate using @fidm/x509
-           const certificates = certs.map(cert => Certificate.fromPEM(Buffer.from(cert)));
-           console.log("Parsed Certificates: ", certificates);
-   
-           return certificates;
+        // Split the certificates, considering potential absence of a trailing newline
+        const certs = chain.split('-----END CERTIFICATE-----\n')
+                           .filter(cert => cert.trim() !== '')  // Filter out any empty results
+                           .map(cert => cert.trim() + '-----END CERTIFICATE-----\n');
+
+        console.log("Individual Certificates: ", certs.length);
+
+        for(let i = 0; i < certs.length; i++) {
+            console.log(`Certificate ${i + 1}: `, certs[i]);
+        }
+
+        // Parse each certificate
+        const certificates = certs.map(cert => Certificate.fromPEM(Buffer.from(cert)));
+        console.log("Parsed Certificates: ", certificates.length);
+
+        return certificates;
     
-      } catch (error) {
+    } catch (error) {
         console.error('Error parsing the certificates:', error);
         throw error;
-      }
+    }
 }
 //WORKS
 function fetchCRL() {
@@ -128,7 +133,7 @@ app.post('/submit-certificate', async (req, res) => {
         console.log("KEY RAW DATA: ", RootCert.publicKey);
 
         for(i = 0; i < cert.length; i++)
-            console.log("ALL KEYS ", cert[i].publicKey.toPEM());
+            console.log("ALL KEYS ", cert[i].toPEM());
 
         console.log("Root PK verified: ", verifyRootPublicKey(RootCert.publicKey.toPEM()));
 
