@@ -101,18 +101,19 @@ function verifyCertificateChain(certificates) {
 }
 
 
-function bufferToPem(buffer) {
-    // Base64 encode the binary data
-    const base64Certificate = buffer.toString('base64');
+function bufferToPem(publicKeyBuffer) {
+ì    // Base64 encode the raw public key data
+    const base64PublicKey = publicKeyBuffer.toString('base64');
   
-    // Split the base64 string into lines of 64 characters long
-    let result = '-----BEGIN PUBLIC KEY-----\n';
+    // Format the base64 string with line breaks and the appropriate headers and footers
+    let pemFormattedKey = '-----BEGIN PUBLIC KEY-----\n';
     let lineLength = 64;
-    for (let i = 0; i < base64Certificate.length; i += lineLength) {
-        result += base64Certificate.substring(i, i + lineLength) + '\n';
+    for (let i = 0; i < base64PublicKey.length; i += lineLength) {
+        pemFormattedKey += base64PublicKey.substring(i, i + lineLength) + '\n';
     }
-    result += '\n-----END PUBLIC KEY-----';
-    return result;
+    pemFormattedKey += '-----END PUBLIC KEY-----';
+
+    return pemFormattedKey;
 
 }
 // Parse Key Attestation Extension
