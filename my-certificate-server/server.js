@@ -44,7 +44,7 @@ function parseCertificateChain(chain) {
            console.log("Individual Certificates: ", certs.length);
 
            for(i=0; i<certs.length; i++){
-            console.log("Individual Certificates: ", certs);
+            console.log("Individual Certificates: ", certs[i]);
            }
    
            // Parse each certificate using @fidm/x509
@@ -60,68 +60,53 @@ function parseCertificateChain(chain) {
     }
 
 
-// Function to verify the root certificate  RETURNING FALSE
-function verifyRootPublicKey(certPem) {
-    try {
-        const cert = loadCertificate(certPem)
-
-        const certPublicKey = cert.publicKey;
-        console.log("Public Key: ", certPublicKey);
-
-        const publicKeyBuffer = Buffer.from(certPublicKey.keyRaw);
-        console.log("Public BUFFER: ", publicKeyBuffer);
-
-        // Construct the DER format for EC public key
-        const derPrefixBuffer = Buffer.from('3059301306072a8648ce3d020106082a8648ce3d030107034200', 'hex');
-        const publicKeyDER = Buffer.concat([derPrefixBuffer, publicKeyBuffer]);
-
-        // Create the public key object from the DER-encoded public key
-        const ecPublicKey = crypto.createPublicKey({
-            key: publicKeyDER,
-            format: 'der',
-            type: 'spki'
-        });
-
-        const publicKeyPEM = ecPublicKey.export({ type: 'spki', format: 'pem' });
-        console.log("Public Key in PEM: ", publicKeyPEM);
-        return publicKeyPEM === GOOGLE_ROOT_KEY;
-    } catch (error) {
-        console.error('Error verifying root public key:', error);
-        throw error;
-    }
-}
-
-function verifyCertificateChain(certificates) {
-    try {
-        console.log("Length:", certificates.length);
-        let previousCert = certificates[0];
-        for (let i = 1; i < certificates.length; i++) {
-            const cert = certificates[i];
-            const isVerified = crypto.createVerify('SHA256')
-                .update(previousCert)
-                .verify(cert, previousCert.signature);
-            console.log("Iterations:", i);
-            if (!isVerified) {
-                return false;
+    function verifyCertificateChain(certificates) {
+        try {
+            console.log("Length:", certificates.length);
+            let isChainValid = true;
+    
+            for (let i = 0; i < certificates.length - 1; i++) {
+                const currentCert = certificates[i];
+                const issuerCert = certificates[i + 1];
+    
+                // Use the issuer's public key to verify the current certificate
+                const issuerPublicKey = crypto.createPublicKey({
+                    key: issuerCert.publicKeyRaw, // Adjust according to your cert structure
+                    format: 'der',
+                    type: 'spki'
+                });
+    
+                const verifier = crypto.createVerify('SHA256');
+                verifier.update(currentCert.raw); // This should be the raw DER-encoded data
+                const isVerified = verifier.verify(issuerPublicKey, currentCert.signature); // Ensure signature is correctly formatted
+    
+                console.log(`Verification of certificate ${i}: ${isVerified}`);
+                if (!isVerified) {
+                    isChainValid = false;
+                    break;
+                }
             }
-            previousCert = cert;
+    
+            // Check root certificate self-signed
+            const rootCert = certificates[certificates.length - 1];
+            const rootPublicKey = crypto.createPublicKey({
+                key: rootCert.publicKeyRaw, // Adjust according to your cert structure
+                format: 'der',
+                type: 'spki'
+            });
+    
+            const rootVerifier = crypto.createVerify('SHA256');
+            rootVerifier.update(rootCert.raw);
+            const isRootVerified = rootVerifier.verify(rootPublicKey, rootCert.signature);
+    
+            console.log("Is root certificate self-signed verified:", isRootVerified);
+            return isChainValid && isRootVerified;
+        } catch (error) {
+            console.error('Verification failed:', error);
+            return false;
         }
-        // Check root certificate (self-signed)
-        const rootCert = certificates[certificates.length - 1];
-        const isVerifiedRoot =  crypto.createVerify('SHA256')
-            .update(rootCert)
-            .verify(rootCert.publicKey, rootCert.signature);
-        console.log("Is root certificate verified ", isVerifiedRoot);
-
-        var rootKey = verifyRootPublicKey(rootCert);
-        console.log("Is root key verified ", rootKey);
-
-        return isVerifiedRoot && rootKey;
-    } catch (error) {
-        console.error('Verification failed:', error);
-        return false;
     }
-}
+    
 
 // Parse Key Attestation Extension
 function parseAttestationExtension(cert) {
