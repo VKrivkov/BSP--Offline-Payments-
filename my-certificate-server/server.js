@@ -103,7 +103,8 @@ function verifyCertificateChain(certificates) {
 
 function bufferToPem(publicKey) {
 
-    // Assume publicKey.publicKey is already a Buffer or convertable to Buffer
+    console.log("PKPK: ", publicKey);
+
     let publicKeyBuffer;
     if (Buffer.isBuffer(publicKey.publicKey)) {
       publicKeyBuffer = publicKey.publicKey;
