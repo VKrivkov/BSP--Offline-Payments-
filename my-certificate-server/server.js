@@ -149,7 +149,7 @@ app.post('/submit-certificate', async (req, res) => {
             message: 'Certificate processed successfully',
             rootValid,
             chainValid,
-            attestationDetails
+            //attestationDetails
         });
 
     } catch (error) {
