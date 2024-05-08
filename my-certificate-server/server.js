@@ -107,9 +107,12 @@ function verifyCertificateChain(certificates) {
 
 
 function verifyRootPublicKey(publicKey) {
-    // Normalize and trim both public keys
-    const formattedPublicKey = publicKey.trim();
-    const formattedGoogleRootKey = GOOGLE_ROOT_KEY.trim();
+    const formattedPublicKey = publicKey.replace(/\s/g, '').trim();
+    const formattedGoogleRootKey = GOOGLE_ROOT_KEY.replace(/\s/g, '').trim();
+
+    // Debugging: Print the keys to be compared
+    console.log("Formatted Public Key:", formattedPublicKey);
+    console.log("Formatted Google Root Key:", formattedGoogleRootKey);
 
     // Use strict equality for comparison
     return formattedPublicKey === formattedGoogleRootKey;
@@ -134,7 +137,6 @@ app.post('/submit-certificate', async (req, res) => {
         const chainValid = verifyCertificateChain(cert);
         //const attestationDetails = parseAttestationExtension(cert);
         const RootCert = cert[cert.length-1];
-        console.log("KEY RAW DATA: ", RootCert.publicKey.toPEM());
 
         for(i = 0; i < cert.length; i++)
             console.log("KEY", i, ":", cert[i].publicKey.toPEM());
