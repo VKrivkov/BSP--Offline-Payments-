@@ -6,8 +6,7 @@ const axios = require('axios');
 const CRL_URL = 'https://android.googleapis.com/attestation/status';
 const EC = require('elliptic').ec;
 const ec = new (require('elliptic').ec)('p256');  // Adjust the curve type based on your requirements
-
-
+const https = require('https');
 
 const app = express();
 const port = 3456;
@@ -57,58 +56,49 @@ function parseCertificateChain(chain) {
         console.error('Error parsing the certificates:', error);
         throw error;
       }
-    }
+}
 
-
-    function verifyCertificateChain(certificates) {
-        try {
-            console.log("Length:", certificates.length);
-            let isChainValid = true;
-    
-            for (let i = 0; i < certificates.length - 1; i++) {
-                const issuerCert = certificates[i];
-                const currentCert = certificates[i + 1];
-    
-                // Use the issuer's public key to verify the current certificate
-                const issuerPublicKey = crypto.createPublicKey({
-                    key: issuerCert.publicKeyRaw, // Adjust according to your cert structure
-                    format: 'der',
-                    type: 'spki'
-                });
-
-                console.log(issuerPublicKey);
-    
-                const verifier = crypto.createVerify('SHA256');
-                verifier.update(currentCert.raw); // This should be the raw DER-encoded data
-                const isVerified = verifier.verify(issuerPublicKey, currentCert.signature); // Ensure signature is correctly formatted
-    
-                console.log(`Verification of certificate ${i}: ${isVerified}`);
-                if (!isVerified) {
-                    isChainValid = false;
-                    break;
-                }
+function fetchCRL() {
+    return new Promise((resolve, reject) => {
+        https.get(CRL_URL, (res) => {
+            if (res.statusCode < 200 || res.statusCode >= 300) {
+                return reject(new Error('Failed to load page, status code: ' + res.statusCode));
             }
-    
-            // Check root certificate self-signed
-            const rootCert = certificates[certificates.length - 1];
-            const rootPublicKey = crypto.createPublicKey({
-                key: rootCert.publicKeyRaw, // Adjust according to your cert structure
-                format: 'der',
-                type: 'spki'
+            let data = '';
+            res.on('data', (chunk) => {
+                data += chunk;
             });
-    
-            const rootVerifier = crypto.createVerify('SHA256');
-            rootVerifier.update(rootCert.raw);
-            const isRootVerified = rootVerifier.verify(rootPublicKey, rootCert.signature);
-    
-            console.log("Is root certificate self-signed verified:", isRootVerified);
-            return isChainValid && isRootVerified;
-        } catch (error) {
-            console.error('Verification failed:', error);
-            return false;
-        }
-    }
-    
+            res.on('end', () => {
+                try {
+                    resolve(JSON.parse(data));
+                } catch (e) {
+                    reject(e);
+                }
+            });
+        }).on('error', (err) => {
+            reject(err);
+        });
+    });
+}
+
+function verifyCertificateChain(certificates) {
+    fetchCRL().then((crl) => {
+        certificates.forEach(cert => {
+            const certObj = new crypto.X509Certificate(cert.raw);
+            const serialNumber = certObj.serialNumber.toLowerCase();
+            if (crl.entries[serialNumber]) {
+                console.log(`Certificate with serial ${serialNumber} is ${crl.entries[serialNumber].status}.`);
+                if (crl.entries[serialNumber].status === 'REVOKED') {
+                    console.warn(`Revoked certificate detected: Serial ${serialNumber}`);
+                }
+            } else {
+                console.log(`Certificate with serial ${serialNumber} is valid.`);
+            }
+        });
+    }).catch((error) => {
+        console.error('Error verifying certificate chain:', error);
+    });
+}
 
 // Parse Key Attestation Extension
 function parseAttestationExtension(cert) {
