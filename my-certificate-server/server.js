@@ -45,7 +45,11 @@ function parseCertificateChain(chain) {
    
            // Split the certificates if the chain contains multiple
            const certs = pemFormatted.split('-----END CERTIFICATE-----\n').map(cert => cert + '-----END CERTIFICATE-----\n').slice(0, -1);
-           console.log("Individual Certificates: ", certs);
+           console.log("Individual Certificates: ", certs.length);
+
+           for(i=0; i<certs.length; i++){
+            console.log("Individual Certificates: ", certs);
+           }
    
            // Parse each certificate using @fidm/x509
            const certificates = certs.map(cert => Certificate.fromPEM(Buffer.from(cert)));
