@@ -75,6 +75,8 @@ function parseCertificateChain(chain) {
                     format: 'der',
                     type: 'spki'
                 });
+
+                console.log(issuerPublicKey);
     
                 const verifier = crypto.createVerify('SHA256');
                 verifier.update(currentCert.raw); // This should be the raw DER-encoded data
