@@ -25,7 +25,7 @@ const GOOGLE_ROOT_KEY =
 'lRfdnJLmN0pTy/4lj4/7tv0Sk3iiKkypnEUtR6WfMgH0QZfKHM1+di+y9TFRtv6y' +
 '//0rb+T+W8a9nsNL/ggjnar86461qO0rOs2cXjp3kOG1FEJ5MVmFmBGtnrKpa73X' +
 'pXyTqRxB/M0n1n/W9nGqC4FSYa04T6N5RIZGBN2z2MT5IKGbFlbC8UrW0DxW7AYI' +
-'mQQcHtGl/m00QLVWutHQoVJYnFPlXTcHYvASLu+RhhsbDmxMgJJ0mcDpvsC4PjvB' +
+'mQQcHtGl/m00QLVWutHQoVJYnFPlXTcHYvASLu+RhhsbDmxMgJJ0mcDpvsC4PjvB' + 
 '+TxywElgS70vE0XmLD+OJtvsBslHZvPBKCOdT0MS+tgSOIfga+z1Z1g7+DVagf7q' +
 'uvmag8jfPioyKvxnK/EgsTUVi2ghzq8wm27ud/mIM7AY2qEORR8Go3TVB4HzWQgp' +
 'Zrt3i5MIlCaY504LzSRiigHCzAPlHws+W0rB5N+er5/2pJKnfBSDiCiFAVtCLOZ7' +
@@ -34,7 +34,7 @@ const GOOGLE_ROOT_KEY =
 'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==' +
 "\n-----END PUBLIC KEY-----";
 
-
+//WORKS
 function parseCertificateChain(chain) {
     try {
         // Normalize newlines and ensure the chain ends properly
@@ -107,8 +107,12 @@ function verifyCertificateChain(certificates) {
 
 
 function verifyRootPublicKey(publicKey) {
-    console.log(publicKey);
-    return publicKey == GOOGLE_ROOT_KEY;
+    // Normalize and trim both public keys
+    const formattedPublicKey = publicKey.trim();
+    const formattedGoogleRootKey = GOOGLE_ROOT_KEY.trim();
+
+    // Use strict equality for comparison
+    return formattedPublicKey === formattedGoogleRootKey;
 }
 
 // Parse Key Attestation Extension
