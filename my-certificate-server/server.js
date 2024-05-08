@@ -105,7 +105,7 @@ function verifyCertificateChain(certificates) {
     });
 }
 
-
+//WORKS
 function verifyRootPublicKey(publicKey) {
     const formattedPublicKey = publicKey.replace(/\s/g, '').trim();
     const formattedGoogleRootKey = GOOGLE_ROOT_KEY.replace(/\s/g, '').trim();
@@ -118,7 +118,7 @@ function verifyRootPublicKey(publicKey) {
     return formattedPublicKey === formattedGoogleRootKey;
 }
 
-// Parse Key Attestation Extension
+// TODO
 function parseAttestationExtension(cert) {
     const extension = cert.extensions.find(ext => ext.oid === '1.3.6.1.4.1.11129.2.1.17');
     if (!extension) return null;
@@ -141,7 +141,8 @@ app.post('/submit-certificate', async (req, res) => {
         for(i = 0; i < cert.length; i++)
             console.log("KEY", i, ":", cert[i].publicKey.toPEM());
 
-        console.log("Root PK verified: ", verifyRootPublicKey(RootCert.publicKey.toPEM()));
+        rootValid = verifyRootPublicKey(RootCert.publicKey.toPEM())
+        console.log("Root PK verified: ", rootValid);
 
 
         res.send({
