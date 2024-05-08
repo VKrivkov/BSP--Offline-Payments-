@@ -111,13 +111,13 @@ function bufferToPem(publicKey) {
     if (Buffer.isBuffer(publicKey.publicKey)) {
       publicKeyBuffer = publicKey.publicKey;
     } else if (typeof publicKey.publicKey === 'string') {
-      // Convert from a hex string to a Buffer, if necessary
       publicKeyBuffer = Buffer.from(publicKey.publicKey, 'hex');
     } else {
       throw new Error('Public key format not recognized');
     }
     
     console.log("PUBLIC KEY BUFFER: ", publicKeyBuffer);
+
     // Create a SPKI (Subject Public Key Info) structure which is needed for PEM
     const spki = new crypto.X509PublicKey({
       key: publicKeyBuffer,
