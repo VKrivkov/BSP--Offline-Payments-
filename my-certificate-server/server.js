@@ -37,13 +37,13 @@ const GOOGLE_ROOT_KEY =
 
 function parseCertificateChain(chain) {
     try {
-        // Ensure chain ends with a newline to catch the last certificate
-        chain = chain.trim() + '\n';
+        // Normalize newlines and ensure the chain ends properly
+        chain = chain.replace(/\r\n/g, '\n').trim() + '\n';
 
-        // Split the certificates, considering potential absence of a trailing newline
-        const certs = chain.split('-----END CERTIFICATE-----\n')
+        // Split the certificates, considering potential formatting issues
+        const certs = chain.split('\n-----END CERTIFICATE-----')
                            .filter(cert => cert.trim() !== '')  // Filter out any empty results
-                           .map(cert => cert.trim() + '-----END CERTIFICATE-----\n');
+                           .map(cert => cert.trim() + '\n-----END CERTIFICATE-----');
 
         console.log("Individual Certificates: ", certs.length);
 
