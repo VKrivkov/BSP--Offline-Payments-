@@ -100,6 +100,21 @@ function verifyCertificateChain(certificates) {
     });
 }
 
+
+function bufferToPem(buffer) {
+    // Base64 encode the binary data
+    const base64Certificate = buffer.toString('base64');
+  
+    // Split the base64 string into lines of 64 characters long
+    let result = '-----BEGIN PUBLIC KEY-----\n';
+    let lineLength = 64;
+    for (let i = 0; i < base64Certificate.length; i += lineLength) {
+        result += base64Certificate.substring(i, i + lineLength) + '\n';
+    }
+    result += '\n-----END PUBLIC KEY-----';
+    return result;
+
+}
 // Parse Key Attestation Extension
 function parseAttestationExtension(cert) {
     const extension = cert.extensions.find(ext => ext.oid === '1.3.6.1.4.1.11129.2.1.17');
@@ -118,6 +133,11 @@ app.post('/submit-certificate', async (req, res) => {
         //const rootValid = verifyRootPublicKey(base64Cert);
         const chainValid = verifyCertificateChain(cert);
         const attestationDetails = parseAttestationExtension(cert);
+        const RPK = cert[cert.length - 1];
+        console.log(RPK);
+
+        const pemRPK = bufferToPem(RPK);
+        console.log(pemRPK);
 
         res.send({
             message: 'Certificate processed successfully',
