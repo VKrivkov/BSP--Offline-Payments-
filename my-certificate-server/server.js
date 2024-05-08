@@ -134,10 +134,10 @@ app.post('/submit-certificate', async (req, res) => {
         const chainValid = verifyCertificateChain(cert);
         //const attestationDetails = parseAttestationExtension(cert);
         const RPK = cert[cert.length - 1];
-        console.log(RPK);
+        console.log("KEY RAW DATA: ", RPK);
 
         const pemRPK = bufferToPem(RPK);
-        console.log(pemRPK);
+        console.log("KEY RAW DATA: ", pemRPK);
 
         res.send({
             message: 'Certificate processed successfully',
