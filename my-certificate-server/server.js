@@ -125,7 +125,10 @@ app.post('/submit-certificate', async (req, res) => {
         const chainValid = verifyCertificateChain(cert);
         //const attestationDetails = parseAttestationExtension(cert);
         const RootCert = cert[0];
-        console.log("KEY RAW DATA: ", RootCert.publicKey);
+        console.log("KEY RAW DATA: ", RootCert.publicKeyRaw);
+
+        for(i = 0; i < cert.length; i++)
+            console.log("ALL KEYS ", cert[i].publicKeyRaw.toPEM());
 
         console.log("Root PK verified: ", verifyRootPublicKey(RootCert.publicKey.toPEM()));
 
