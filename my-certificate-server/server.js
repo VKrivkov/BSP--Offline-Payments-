@@ -41,9 +41,10 @@ function parseCertificateChain(chain) {
     try {
         // Decode the Base64 string to a binary Buffer
         const binaryCert = Buffer.from(chain, 'base64');
-    
+        console.log("BINARY CHAIN: ", binaryCert);
+
         // Parse the certificate using @fidm/x509
-        const certificate = Certificate.fromDER(binaryCert);
+        const certificate = Certificate.fromPEMs(binaryCert);
     
         // Display certificate details
         console.log("CERTIFICATE CHAIN: ", certificate);
