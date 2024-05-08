@@ -39,32 +39,22 @@ const GOOGLE_ROOT_KEY =
 
 function parseCertificateChain(chain) {
     try {
-        // Decode the Base64 string to a binary Buffer
-        const binaryCert = Buffer.from(chain, 'base64');
-        console.log("BINARY CHAIN: ", binaryCert);
-
-        // Parse the certificate using @fidm/x509
-        const certificate = Certificate.fromPEMs(binaryCert);
+           // Decode the Base64 string to a binary Buffer
+           const pemFormatted = Buffer.from(chain, 'base64').toString('utf8');
+           console.log("PEM Formatted Chain: ", pemFormatted);
+   
+           // Split the certificates if the chain contains multiple
+           const certs = pemFormatted.split('-----END CERTIFICATE-----\n').map(cert => cert + '-----END CERTIFICATE-----\n').slice(0, -1);
+           console.log("Individual Certificates: ", certs);
+   
+           // Parse each certificate using @fidm/x509
+           const certificates = certs.map(cert => Certificate.fromPEM(Buffer.from(cert)));
+           console.log("Parsed Certificates: ", certificates);
+   
+           return certificates;
     
-        // Display certificate details
-        console.log("CERTIFICATE CHAIN: ", certificate);
-    
-        // Checking if the public key is ECC
-        if (certificate.publicKey.algo === 'ecPublicKey') {
-          console.log("Public Key Type: ECC");
-          const ec = new elliptic.ec(certificate.publicKey.namedCurve);
-    
-          // Retrieve public key details
-          const pubKey = ec.keyFromPublic(certificate.publicKey.data);
-    
-          console.log("Public Key X coordinate: ", pubKey.getPublic().getX().toString(16));
-          console.log("Public Key Y coordinate: ", pubKey.getPublic().getY().toString(16));
-        } else {
-          console.log("Non-ECC public key found, function expects ECC keys.");
-        }
-        return certificate;
       } catch (error) {
-        console.error('Error converting Base64 to certificate:', error);
+        console.error('Error parsing the certificates:', error);
         throw error;
       }
     }
@@ -103,13 +93,14 @@ function verifyRootPublicKey(certPem) {
 
 function verifyCertificateChain(certificates) {
     try {
+        console.log("Length:", certificates.length);
         let previousCert = certificates[0];
         for (let i = 1; i < certificates.length; i++) {
             const cert = certificates[i];
             const isVerified = crypto.createVerify('SHA256')
                 .update(previousCert)
                 .verify(cert, previousCert.signature);
-                console.log("Iterations:", i);
+            console.log("Iterations:", i);
             if (!isVerified) {
                 return false;
             }
@@ -144,7 +135,7 @@ function parseAttestationExtension(cert) {
 app.post('/submit-certificate', async (req, res) => {
     try {
         const base64Cert = req.body.CertificateChain.trim();
-        console.log('Received Base64 X.509 certificate chain from request body:', base64Cert);
+        console.log('Received PEM certificate chain from request body:', base64Cert);
         const cert = parseCertificateChain(base64Cert);
 
         //const rootValid = verifyRootPublicKey(base64Cert);
