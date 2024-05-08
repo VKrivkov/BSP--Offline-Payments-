@@ -103,7 +103,7 @@ function verifyCertificateChain(certificates) {
 
 function bufferToPem(publicKey) {
 
-    console.log("PKPK: ", publicKey);
+    console.log("PKPK: ", publicKey.publicKey);
 
     let publicKeyBuffer;
     if (Buffer.isBuffer(publicKey.publicKey)) {
