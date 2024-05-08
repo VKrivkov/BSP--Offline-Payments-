@@ -102,10 +102,7 @@ function verifyCertificateChain(certificates) {
 
 
 function bufferToPem(publicKey) {
-    if (!publicKey || !publicKey.publicKey) {
-      throw new Error('Invalid public key data');
-    }
-  
+
     // Assume publicKey.publicKey is already a Buffer or convertable to Buffer
     let publicKeyBuffer;
     if (Buffer.isBuffer(publicKey.publicKey)) {
