@@ -102,20 +102,38 @@ function verifyCertificateChain(certificates) {
 
 
 function bufferToPem(publicKeyBuffer) {
-    // Base64 encode the raw public key data
-    const base64PublicKey = publicKeyBuffer.toString('base64');
-  
-    // Format the base64 string with line breaks and the appropriate headers and footers
-    let pemFormattedKey = '-----BEGIN PUBLIC KEY-----\n';
-    let lineLength = 64;
-    for (let i = 0; i < base64PublicKey.length; i += lineLength) {
-        pemFormattedKey += base64PublicKey.substring(i, i + lineLength) + '\n';
+    if (!publicKey || !publicKey.publicKey) {
+      throw new Error('Invalid public key data');
     }
-    pemFormattedKey += '-----END PUBLIC KEY-----';
+  
+    // Assume publicKey.publicKey is already a Buffer or convertable to Buffer
+    let publicKeyBuffer;
+    if (Buffer.isBuffer(publicKey.publicKey)) {
+      publicKeyBuffer = publicKey.publicKey;
+    } else if (typeof publicKey.publicKey === 'string') {
+      // Convert from a hex string to a Buffer, if necessary
+      publicKeyBuffer = Buffer.from(publicKey.publicKey, 'hex');
+    } else {
+      throw new Error('Public key format not recognized');
+    }
+  
+    // Create a SPKI (Subject Public Key Info) structure which is needed for PEM
+    const spki = new crypto.X509PublicKey({
+      key: publicKeyBuffer,
+      format: 'der',
+      type: 'spki'
+    });
+  
+    // Convert the SPKI structure to PEM format
+    const pemKey = spki.export({
+      type: 'spki',
+      format: 'pem'
+    });
+  
+    return pemKey;
+  }
 
-    return pemFormattedKey;
-
-}
+  
 // Parse Key Attestation Extension
 function parseAttestationExtension(cert) {
     const extension = cert.extensions.find(ext => ext.oid === '1.3.6.1.4.1.11129.2.1.17');
