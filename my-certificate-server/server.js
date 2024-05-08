@@ -103,16 +103,8 @@ function verifyCertificateChain(certificates) {
 
 function bufferToPem(publicKey) {
 
-    console.log("PKPK: ", publicKey.publicKey);
-
-    let publicKeyBuffer;
-    if (Buffer.isBuffer(publicKey.publicKey)) {
-      publicKeyBuffer = publicKey.publicKey;
-    } else if (typeof publicKey.publicKey === 'string') {
-      publicKeyBuffer = Buffer.from(publicKey.publicKey, 'hex');
-    } else {
-      throw new Error('Public key format not recognized');
-    }
+    
+    let publicKeyBuffer = Buffer.from(publicKey, 'hex');;
     
     console.log("PUBLIC KEY BUFFER: ", publicKeyBuffer);
 
