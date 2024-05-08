@@ -101,21 +101,8 @@ function verifyCertificateChain(certificates) {
 }
 
 
-function verifyRootPublicKey(rawPublicKeyData) {
-    try {
-        const publicKey = crypto.createPublicKey({
-            key: rawPublicKeyData,
-            format: 'der',
-            type: 'spki'
-        });
-        const certPublicKeyPem = publicKey.export({ type: 'spki', format: 'pem' });
-
-        return certPublicKeyPem === GOOGLE_ROOT_PUBLIC_KEY_PEM;
-
-    } catch (error) {
-        console.error('Error verifying root public key:', error);
-        throw error;
-    }
+function verifyRootPublicKey(publicKey) {
+    return publicKey === GOOGLE_ROOT_PUBLIC_KEY_PEM;
 }
 
 // Parse Key Attestation Extension
@@ -139,7 +126,7 @@ app.post('/submit-certificate', async (req, res) => {
         const RootCert = cert[cert.length - 1];
         console.log("KEY RAW DATA: ", RootCert.publicKey);
 
-        console.log("Root PK verified: ", verifyRootPublicKey(RootCert.publicKey));
+        console.log("Root PK verified: ", verifyRootPublicKey(RootCert.publicKey.ToPEM()));
 
 
         res.send({
