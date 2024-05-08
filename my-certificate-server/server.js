@@ -124,7 +124,7 @@ app.post('/submit-certificate', async (req, res) => {
         //const rootValid = verifyRootPublicKey(base64Cert);
         const chainValid = verifyCertificateChain(cert);
         //const attestationDetails = parseAttestationExtension(cert);
-        const RootCert = cert[cert.length - 1];
+        const RootCert = cert[0];
         console.log("KEY RAW DATA: ", RootCert.publicKey);
 
         console.log("Root PK verified: ", verifyRootPublicKey(RootCert.publicKey.toPEM()));
