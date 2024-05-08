@@ -35,7 +35,7 @@ const GOOGLE_ROOT_KEY =
 "\n-----END PUBLIC KEY-----";
 
 
-
+//WORKS
 function parseCertificateChain(chain) {
     try {
            // Split the certificates if the chain contains multiple
@@ -57,7 +57,7 @@ function parseCertificateChain(chain) {
         throw error;
       }
 }
-
+//WORKS
 function fetchCRL() {
     return new Promise((resolve, reject) => {
         https.get(CRL_URL, (res) => {
@@ -80,7 +80,7 @@ function fetchCRL() {
         });
     });
 }
-
+//WORKS
 function verifyCertificateChain(certificates) {
     fetchCRL().then((crl) => {
         certificates.forEach(cert => {
@@ -132,7 +132,7 @@ app.post('/submit-certificate', async (req, res) => {
 
         //const rootValid = verifyRootPublicKey(base64Cert);
         const chainValid = verifyCertificateChain(cert);
-        const attestationDetails = parseAttestationExtension(cert);
+        //const attestationDetails = parseAttestationExtension(cert);
         const RPK = cert[cert.length - 1];
         console.log(RPK);
 
