@@ -208,28 +208,23 @@ function verifyRootPublicKey(publicKey) {
 
 function parseAttestationExtension(cert) {
     try {
-        // ASN.1 parsing to find the attestation extension
         const exts = cert.extensions;
         let keyDescriptionExt = exts.find(ext => ext.oid === '1.3.6.1.4.1.11129.2.1.17');
-
         if (!keyDescriptionExt) {
             throw new Error('Key attestation extension not found');
         }
-
         console.log('Key attestation extension ', keyDescriptionExt);
-        // Parsing the extension as ASN.1
 
-        const buffer = Buffer.from(keyDescriptionExt.value, 'binary');
-        console.log('Buffer content (hex):', buffer.toString('hex'));
+        const binaryString = Buffer.from(keyDescriptionExt.value).toString('binary');
 
-        // Convert the Node.js Buffer to a Forge buffer using 'raw' encoding to handle binary data
-        const derBuffer = forge.util.createBuffer(buffer.toString('binary'), 'raw');
+        // Decode using forge
+        const asn1 = forge.asn1.fromDer(binaryString);
 
-        // Decode the DER buffer to an ASN.1 object
-        const asn1 = forge.asn1.fromDer(derBuffer);
+        // Log the full ASN.1 structure to understand the contents
+        console.log(forge.asn1.prettyPrint(asn1));
 
-        console.log('Decoded ASN.1 structure:', forge.asn1.prettyPrint(asn1));
-        return asn1;
+        return asn1; 
+        
     } catch (error) {
         console.error('Error parsing attestation extension:', error);
         throw error;
