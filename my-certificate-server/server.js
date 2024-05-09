@@ -169,7 +169,8 @@ function parseAttestationExtension(cert) {
 
         console.log('Key attestation extension ', keyDescriptionExt);
         // Parsing the extension as ASN.1
-        const decoded = KeyDescription.decode(keyDescriptionExt, 'der');  // 'der' is the encoding format
+        const buffer = Buffer.from(keyDescriptionExt.value, 'base64');
+        const decoded = KeyDescription.decode(buffer, 'der');  // 'der' is the encoding format
         console.log('Key attestation extension DOCEODED: ', decoded);
         return decoded;
     } catch (error) {
