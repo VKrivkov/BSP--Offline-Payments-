@@ -180,11 +180,10 @@ async function verifyCertificateChain(certificates) {
             }
         
 
-            if (i < certificates.length - 1) {
+            if (i < certificates.length - 2) {
                 const issuerCertObj = new crypto.X509Certificate(certificates[i + 1].raw);
-
                 // Verify current certificate using issuer's public key
-                if (!cert.verify(issuerCertObj.publicKey)) {
+                if (!certificates[i].verify(issuerCertObj.publicKey)) {
                     console.warn(`Certificate with serial ${serialNumber} is not properly signed by its issuer.`);
                     allValid = false; // Mark as invalid if not properly signed
                 }
