@@ -31,7 +31,7 @@ const GOOGLE_ROOT_KEY =
 'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==' +
 "\n-----END PUBLIC KEY-----";
 
-
+//WORKS FOR MANDATORY FIELDS
 class KeyDescription {
     constructor(reader) {
         try {
@@ -108,10 +108,6 @@ class KeyDescription {
     }
 }
 
-
-
-
-
 //WORKS
 function parseCertificateChain(chain) {
     try {
@@ -122,18 +118,10 @@ function parseCertificateChain(chain) {
         const certs = chain.split('\n-----END CERTIFICATE-----')
                            .filter(cert => cert.trim() !== '')  // Filter out any empty results
                            .map(cert => cert.trim() + '\n-----END CERTIFICATE-----');
-
-        console.log("Individual Certificates: ", certs.length);
-
  
-
         // Parse each certificate
         const certificates = certs.map(cert => Certificate.fromPEM(Buffer.from(cert)));
         console.log("Parsed Certificates: ", certificates.length);
-
-        for(let i = 0; i < certificates.length; i++) {
-            console.log(`Certificate ${i + 1}: `, certificates[i]);
-        }
         return certificates;
     
     } catch (error) {
@@ -204,6 +192,7 @@ function verifyRootPublicKey(publicKey) {
     return formattedPublicKey === formattedGoogleRootKey;
 }
 
+//WORKS
 function parseAttestationExtension(cert) {
     try {
         const exts = cert.extensions;
@@ -212,7 +201,6 @@ function parseAttestationExtension(cert) {
             throw new Error('Key attestation extension not found');
         }
 
-        console.log('Extension raw data:', keyDescriptionExt.value.toString('hex'));
         const reader = new Ber.Reader(keyDescriptionExt.value);
         const keyDescription = new KeyDescription(reader);
         console.log('Parsed Key Description:', keyDescription);
@@ -234,9 +222,6 @@ app.post('/submit-certificate', async (req, res) => {
 
         const chainValid = await verifyCertificateChain(cert);
         const RootCert = cert[cert.length-1];
-
-        for(i = 0; i < cert.length; i++)
-            console.log("KEY", i, ":", cert[i].publicKey.toPEM());
 
         rootValid = verifyRootPublicKey(RootCert.publicKey.toPEM())
         console.log("CHAIN verified: ", chainValid);
