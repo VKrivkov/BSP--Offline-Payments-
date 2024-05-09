@@ -36,7 +36,7 @@ const BerWriter = asn1.Ber.Writer;
 class SecurityLevel {
     constructor(reader) {
         if (reader.readSequence()) {
-            this.level = reader.readInt();
+            this.level = reader.readIntOrEnum();
         }
     }
 }
@@ -65,7 +65,7 @@ class RootOfTrust {
 class VerifiedBootState {
     constructor(reader) {
         if (reader.readSequence()) {
-            this.state = reader.readInt();
+            this.state = reader.readIntOrEnum();
         }
     }
 }
@@ -73,21 +73,15 @@ class VerifiedBootState {
 class KeyDescription {
     constructor(reader) {
         try {
-            // Read the outer sequence
             if (reader.readSequence()) {
-                this.attestationVersion = reader.readInt();
+                this.attestationVersion = this.readIntOrEnum(reader);
                 this.attestationSecurityLevel = new SecurityLevel(reader);
-                this.keyMintVersion = reader.readInt();
+                this.keyMintVersion = this.readIntOrEnum(reader);
                 this.keyMintSecurityLevel = new SecurityLevel(reader);
                 this.attestationChallenge = reader.readString(asn1.Ber.OctetString, true);
                 this.uniqueId = reader.readString(asn1.Ber.OctetString, true);
-                // Handle optional components with conditional reading
-                if (reader.peek() === asn1.Ber.Context | 0) {
-                    this.softwareEnforced = new AuthorizationList(reader);
-                }
-                if (reader.peek() === asn1.Ber.Context | 1) {
-                    this.hardwareEnforced = new AuthorizationList(reader);
-                }
+                this.softwareEnforced = new AuthorizationList(reader);
+                this.hardwareEnforced = new AuthorizationList(reader);
             }
         } catch (error) {
             console.error('Failed to parse KeyDescription:', error);
@@ -95,7 +89,19 @@ class KeyDescription {
             throw error;
         }
     }
+
+    readIntOrEnum(reader) {
+        const tag = reader.peek();
+        if (tag === asn1.Ber.Integer) {
+            return reader.readInt();
+        } else if (tag === asn1.Ber.Enumerated) {
+            return reader.readEnumeration();
+        } else {
+            throw new Error(`Unexpected tag: Expected Integer or Enumerated, got ${tag}`);
+        }
+    }
 }
+
 
 //WORKS
 function parseCertificateChain(chain) {
