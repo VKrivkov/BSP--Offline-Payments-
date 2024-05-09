@@ -36,7 +36,7 @@ const BerWriter = asn1.Ber.Writer;
 class SecurityLevel {
     constructor(reader) {
         if (reader.readSequence()) {
-            this.level = KeyDescription.readIntOrEnum();
+            this.level = reader.readEnumeration(asn1.Ber.Enumerated);
         }
     }
 }
@@ -65,7 +65,7 @@ class RootOfTrust {
 class VerifiedBootState {
     constructor(reader) {
         if (reader.readSequence()) {
-            this.state = KeyDescription.readIntOrEnum();
+            this.state = reader.readEnumeration(asn1.Ber.Enumerated);
         }
     }
 }
@@ -74,9 +74,9 @@ class KeyDescription {
     constructor(reader) {
         try {
             if (reader.readSequence()) {
-                this.attestationVersion = this.readIntOrEnum(reader);
+                this.attestationVersion = reader.readEnumeration(asn1.Ber.Enumerated);
                 this.attestationSecurityLevel = new SecurityLevel(reader);
-                this.keyMintVersion = this.readIntOrEnum(reader);
+                this.keyMintVersion = treader.readEnumeration(asn1.Ber.Enumerated);
                 this.keyMintSecurityLevel = new SecurityLevel(reader);
                 this.attestationChallenge = reader.readString(asn1.Ber.OctetString, true);
                 this.uniqueId = reader.readString(asn1.Ber.OctetString, true);
@@ -87,17 +87,6 @@ class KeyDescription {
             console.error('Failed to parse KeyDescription:', error);
             console.log('Reader state:', reader);
             throw error;
-        }
-    }
-
-    readIntOrEnum(reader) {
-        const tag = reader.peek();
-        if (tag === asn1.Ber.Integer) {
-            return reader.readInt();
-        } else if (tag === asn1.Ber.Enumerated) {
-            return reader.readEnumeration();
-        } else {
-            throw new Error(`Unexpected tag: Expected Integer or Enumerated, got ${tag}`);
         }
     }
 }
