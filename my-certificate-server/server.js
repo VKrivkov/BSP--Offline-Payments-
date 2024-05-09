@@ -216,6 +216,7 @@ function parseAttestationExtension(cert) {
         const reader = new Ber.Reader(keyDescriptionExt.value);
         const keyDescription = new KeyDescription(reader);
         console.log('Parsed Key Description:', keyDescription);
+        return keyDescription;
         
     } catch (error) {
         console.error('Error parsing attestation extension:', error);
@@ -261,8 +262,7 @@ app.post('/submit-certificate', async (req, res) => {
             message: 'Certificate processed successfully',
             rootValid,
             chainValid,
-            //TODO
-            //attestationDetails
+            attestationDetails
         });
 
     } catch (error) {
