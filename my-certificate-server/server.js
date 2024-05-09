@@ -144,7 +144,7 @@ app.post('/submit-certificate', async (req, res) => {
         console.log('Received PEM certificate chain from request body:', base64Cert);
         const cert = parseCertificateChain(base64Cert);
 
-        const chainValid = verifyCertificateChain(cert);
+        const chainValid = await verifyCertificateChain(cert);
         //const attestationDetails = parseAttestationExtension(cert);
         const RootCert = cert[cert.length-1];
 
@@ -156,7 +156,7 @@ app.post('/submit-certificate', async (req, res) => {
         console.log("Root PK verified: ", rootValid);
 
 
-        res.send({
+        await res.send({
             message: 'Certificate processed successfully',
             rootValid,
             chainValid,
