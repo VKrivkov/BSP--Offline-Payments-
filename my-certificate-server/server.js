@@ -220,12 +220,8 @@ function parseAttestationExtension(cert) {
         const buffer = Buffer.from(keyDescriptionExt.value, 'base64');
         console.log('Key attestation extension BUFFER: ', buffer);
 
-        console.log('Decoder type:', typeof KeyDescription);
-        console.log('Decode method available:', KeyDescription.decode);
-
-        const decoded = KeyDescription.decode(buffer, 'der');  // Correctly decode the buffer
+        const decoded = KeyDescription.decode(buffer, 'der'); // 'der' is the encoding format
       
-
         console.log('Key attestation extension DECODED: ', decoded);
         return decoded;
     } catch (error) {
