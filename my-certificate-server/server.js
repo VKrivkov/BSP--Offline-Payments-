@@ -17,6 +17,7 @@ const cbor = require('cbor');
 
 const { Certificate } = require('@fidm/x509');
 const { ASN1 } = require('@lapo/asn1js');
+const asn1 = require('asn1.js');
 const { redirectDocument } = require('react-router-dom');
 const { validateHeaderName } = require('http');
 
