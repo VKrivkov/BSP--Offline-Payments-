@@ -215,10 +215,10 @@ function parseAttestationExtension(cert) {
         }
         console.log('Key attestation extension ', keyDescriptionExt);
 
-        const binaryString = Buffer.from(keyDescriptionExt.value).toString('binary');
+        const hexString = keyDescriptionExt.value.toString('hex');
 
-        // Decode using forge
-        const asn1 = forge.asn1.fromDer(binaryString);
+        // Decode using forge from hex
+        const asn1 = forge.asn1.fromDer(forge.util.hexToBytes(hexString));
 
         // Log the full ASN.1 structure to understand the contents
         console.log(forge.asn1.prettyPrint(asn1));
