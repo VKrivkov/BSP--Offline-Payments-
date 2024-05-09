@@ -30,58 +30,19 @@ const GOOGLE_ROOT_KEY =
 'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==' +
 "\n-----END PUBLIC KEY-----";
 
-const BerReader = asn1.Ber.Reader;
-const BerWriter = asn1.Ber.Writer;
-
-class SecurityLevel {
-    constructor(reader) {
-        if (reader.readSequence()) {
-            this.level = reader.readInt();
-        }
-    }
-}
-
-class AuthorizationList {
-    constructor(reader) {
-        if (reader.readSequence()) {
-            // You need to implement the parsing logic for each field
-            this.purpose = []; // This should be parsed according to the EXPLICIT tag and data type
-            // Repeat for other fields
-        }
-    }
-}
-
-class RootOfTrust {
-    constructor(reader) {
-        if (reader.readSequence()) {
-            this.verifiedBootKey = reader.readString(asn1.Ber.OctetString, true);
-            this.deviceLocked = reader.readBoolean();
-            this.verifiedBootState = new VerifiedBootState(reader);
-            this.verifiedBootHash = reader.readString(asn1.Ber.OctetString, true);
-        }
-    }
-}
-
-class VerifiedBootState {
-    constructor(reader) {
-        if (reader.readSequence()) {
-            this.state = reader.readEnumeration();
-        }
-    }
-}
 
 class KeyDescription {
     constructor(reader) {
         try {
             if (reader.readSequence()) {
-                this.attestationVersion = reader.readInt()
-                this.attestationSecurityLevel = new SecurityLevel(reader);
-                this.keyMintVersion = reader.readEnumeration();
-                this.keyMintSecurityLevel = reader.readString(asn1.Ber.OctetString, true);
-                this.attestationChallenge = reader.readString(asn1.Ber.OctetString, true);
-                //this.uniqueId = reader.readString(asn1.Ber.OctetString, true);
-                //this.softwareEnforced = new AuthorizationList(reader);
-                //this.hardwareEnforced = new AuthorizationList(reader);
+                this.attestationVersion = 200;  // Static value as per your schema
+                this.attestationSecurityLevel = reader.readEnum();  // Reading ENUMERATED SecurityLevel
+                this.keyMintVersion = reader.readInt();  // Reading INTEGER
+                this.keyMintSecurityLevel = reader.readEnum();  // Reading ENUMERATED SecurityLevel
+                this.attestationChallenge = reader.readString(0x04, true);  // Reading OCTET_STRING
+                this.uniqueId = reader.readString(0x04, true);  // Reading OCTET_STRING
+                this.softwareEnforced = this.parseAuthorizationList(reader);  // Parsing AuthorizationList
+                this.hardwareEnforced = this.parseAuthorizationList(reader);
             }
         } catch (error) {
             console.error('Failed to parse KeyDescription:', error);
@@ -89,7 +50,40 @@ class KeyDescription {
             throw error;
         }
     }
+
+    parseAuthorizationList(reader) {
+        let list = {};
+        if (reader.readSequence()) {
+            // You should add checks if each field is available (optional)
+            // and also read according to tag numbers.
+            // For simplicity, here's a rough draft on how you might read some fields.
+            list.purpose = reader.readTag(1) ? reader.readSet() : undefined;
+            list.algorithm = reader.readTag(2) ? reader.readInt() : undefined;
+            list.keySize = reader.readTag(3) ? reader.readInt() : undefined;
+            // Add similar entries for other fields, respecting optional and explicit tagging
+
+            // Example for how deeper nested structures might be handled
+            if (reader.readTag(704)) {  // RootOfTrust, if present
+                list.rootOfTrust = this.parseRootOfTrust(reader);
+            }
+        }
+        return list;
+    }
+
+    parseRootOfTrust(reader) {
+        let root = {};
+        if (reader.readSequence()) {
+            root.verifiedBootKey = reader.readString(0x04, true);
+            root.deviceLocked = reader.readBoolean();
+            root.verifiedBootState = reader.readEnum();
+            root.verifiedBootHash = reader.readString(0x04, true);
+        }
+        return root;
+    }
+    
 }
+
+
 
 
 //WORKS
