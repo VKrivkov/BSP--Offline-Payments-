@@ -221,8 +221,12 @@ function parseAttestationExtension(cert) {
         const buffer = keyDescriptionExt.value;
         try {
             // Forge uses its own ASN.1 implementation to parse the buffer
-            const asn1 = forge.asn1.fromDer(buffer);
-            // Custom function to handle specific schema parsing could be added here
+            const derBuffer = forge.util.createBuffer(buffer, 'binary');
+
+            // Decode the DER buffer to an ASN.1 object
+            const asn1 = forge.asn1.fromDer(derBuffer);
+            
+            // Return a human-readable format of the ASN.1 data
             return forge.asn1.prettyPrint(asn1);
         } catch (error) {
             console.error('Error parsing ASN.1 structure:', error);
