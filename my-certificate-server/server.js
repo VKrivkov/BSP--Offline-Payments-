@@ -40,14 +40,22 @@ const GOOGLE_ROOT_KEY =
 const KeyDescription = asn1.define('KeyDescription', function() {
     this.seq().obj(
         this.key('attestationVersion').int(),
-        this.key('attestationSecurityLevel').explicit(0).int().optional(),
+        this.key('attestationSecurityLevel').use(SecurityLevel),
         this.key('keyMintVersion').int(),
-        this.key('keyMintSecurityLevel').int(),
+        this.key('keyMintSecurityLevel').use(SecurityLevel),
         this.key('attestationChallenge').octstr(),
         this.key('uniqueId').octstr(),
-        this.key('softwareEnforced').explicit(0).use(AuthorizationList),
-        this.key('hardwareEnforced').explicit(1).use(AuthorizationList)
+        this.key('softwareEnforced').use(AuthorizationList),
+        this.key('hardwareEnforced').use(AuthorizationList)
     );
+});
+
+const SecurityLevel = asn1.define('SecurityLevel', function() {
+    this.enum({
+        0: 'Software',
+        1: 'TrustedEnvironment',
+        2: 'StrongBox'
+    });
 });
 
 const AuthorizationList = asn1.define('AuthorizationList', function() {
@@ -59,11 +67,58 @@ const AuthorizationList = asn1.define('AuthorizationList', function() {
         this.key('padding').explicit(6).setof('int').optional(),
         this.key('ecCurve').explicit(10).int().optional(),
         this.key('rsaPublicExponent').explicit(200).int().optional(),
+        this.key('mgfDigest').explicit(203).setof('int').optional(),
         this.key('rollbackResistance').explicit(303).null_().optional(),
         this.key('earlyBootOnly').explicit(305).null_().optional(),
-        // Add other fields as needed
+        this.key('activeDateTime').explicit(400).int().optional(),
+        this.key('originationExpireDateTime').explicit(401).int().optional(),
+        this.key('usageExpireDateTime').explicit(402).int().optional(),
+        this.key('usageCountLimit').explicit(405).int().optional(),
+        this.key('noAuthRequired').explicit(503).null_().optional(),
+        this.key('userAuthType').explicit(504).int().optional(),
+        this.key('authTimeout').explicit(505).int().optional(),
+        this.key('allowWhileOnBody').explicit(506).null_().optional(),
+        this.key('trustedUserPresenceRequired').explicit(507).null_().optional(),
+        this.key('trustedConfirmationRequired').explicit(508).null_().optional(),
+        this.key('unlockedDeviceRequired').explicit(509).null_().optional(),
+        this.key('creationDateTime').explicit(701).int().optional(),
+        this.key('origin').explicit(702).int().optional(),
+        this.key('rootOfTrust').explicit(704).use(RootOfTrust).optional(),
+        this.key('osVersion').explicit(705).int().optional(),
+        this.key('osPatchLevel').explicit(706).int().optional(),
+        this.key('attestationApplicationId').explicit(709).octstr().optional(),
+        this.key('attestationIdBrand').explicit(710).octstr().optional(),
+        this.key('attestationIdDevice').explicit(711).octstr().optional(),
+        this.key('attestationIdProduct').explicit(712).octstr().optional(),
+        this.key('attestationIdSerial').explicit(713).octstr().optional(),
+        this.key('attestationIdImei').explicit(714).octstr().optional(),
+        this.key('attestationIdMeid').explicit(715).octstr().optional(),
+        this.key('attestationIdManufacturer').explicit(716).octstr().optional(),
+        this.key('attestationIdModel').explicit(717).octstr().optional(),
+        this.key('vendorPatchLevel').explicit(718).int().optional(),
+        this.key('bootPatchLevel').explicit(719).int().optional(),
+        this.key('deviceUniqueAttestation').explicit(720).null_().optional()
     );
 });
+
+const RootOfTrust = asn1.define('RootOfTrust', function() {
+    this.seq().obj(
+        this.key('verifiedBootKey').octstr(),
+        this.key('deviceLocked').bool(),
+        this.key('verifiedBootState').use(VerifiedBootState),
+        this.key('verifiedBootHash').octstr()
+    );
+});
+
+const VerifiedBootState = asn1.define('VerifiedBootState', function() {
+    this.enum({
+        0: 'Verified',
+        1: 'SelfSigned',
+        2: 'Unverified',
+        3: 'Failed'
+    });
+});
+
 
 //WORKS
 function parseCertificateChain(chain) {
