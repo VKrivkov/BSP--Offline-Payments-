@@ -115,7 +115,6 @@ async function verifyCertificateChain(certificates) {
     }
 }
 
-
 //WORKS
 function verifyRootPublicKey(publicKey) {
     const formattedPublicKey = publicKey.replace(/\s/g, '').trim();
@@ -129,12 +128,62 @@ function verifyRootPublicKey(publicKey) {
     return formattedPublicKey === formattedGoogleRootKey;
 }
 
-// TODO
 function parseAttestationExtension(cert) {
-    const extension = cert.extensions.find(ext => ext.oid === '1.3.6.1.4.1.11129.2.1.17');
-    if (!extension) return null;
-    const result = ASN1.decode(extension.value);
-    return result; // Simplified for demonstration; parse according to actual structure
+    try {
+        // ASN.1 parsing to find the attestation extension
+        const exts = cert.extensions;
+        let keyDescriptionExt = exts.find(ext => ext.oid === '1.3.6.1.4.1.11129.2.1.17');
+
+        if (!keyDescriptionExt) {
+            throw new Error('Key attestation extension not found');
+        }
+
+        // Parsing the extension as ASN.1
+        const asn1 = ASN1.decode(keyDescriptionExt.raw);
+        const keyDescription = parseKeyDescription(asn1);
+
+        return keyDescription;
+    } catch (error) {
+        console.error('Error parsing attestation extension:', error);
+        throw error;
+    }
+}
+
+function parseKeyDescription(asn1) {
+    // Extract data from ASN.1 structure according to the schema provided in the documentation
+    let result = {
+        attestationVersion: asn1.sub[0].content(),
+        attestationSecurityLevel: parseSecurityLevel(asn1.sub[1].content()),
+        keyMintVersion: asn1.sub[2].content(),
+        keyMintSecurityLevel: parseSecurityLevel(asn1.sub[3].content()),
+        attestationChallenge: asn1.sub[4].content(),
+        uniqueId: asn1.sub[5].content(),
+        softwareEnforced: parseAuthorizationList(asn1.sub[6]),
+        hardwareEnforced: parseAuthorizationList(asn1.sub[7])
+    };
+    return result;
+}
+
+function parseSecurityLevel(level) {
+    switch (level) {
+        case 0:
+            return 'Software';
+        case 1:
+            return 'TrustedEnvironment';
+        case 2:
+            return 'StrongBox';
+        default:
+            return 'Unknown';
+    }
+}
+
+function parseAuthorizationList(asn1) {
+    // Parse each field in the AuthorizationList
+    let list = {};
+    asn1.sub.forEach(element => {
+        list[element.tag] = element.content();
+    });
+    return list;
 }
 
 // Function to handle incoming certificates
@@ -145,7 +194,6 @@ app.post('/submit-certificate', async (req, res) => {
         const cert = parseCertificateChain(base64Cert);
 
         const chainValid = await verifyCertificateChain(cert);
-        //const attestationDetails = parseAttestationExtension(cert);
         const RootCert = cert[cert.length-1];
 
         for(i = 0; i < cert.length; i++)
@@ -154,6 +202,21 @@ app.post('/submit-certificate', async (req, res) => {
         rootValid = verifyRootPublicKey(RootCert.publicKey.toPEM())
         console.log("CHAIN verified: ", chainValid);
         console.log("Root PK verified: ", rootValid);
+
+        let attestationDetails = null;
+        // Iterate over the certificates to find the one with the attestation extension
+        for (let i = 0; i < cert.length; i++) {
+            try {
+                attestationDetails = parseAttestationExtension(cert[i]);
+                // If parsing is successful and data is found, stop the loop
+                if (attestationDetails) {
+                    console.log("Attestation Details Found in Certificate", i);
+                    break;
+                }
+            } catch (error) {
+                console.log(`No attestation data in certificate ${i}`, error);
+            }
+        }
 
 
         await res.send({
