@@ -122,6 +122,9 @@ function parseCertificateChain(chain) {
         // Parse each certificate
         const certificates = certs.map(cert => Certificate.fromPEM(Buffer.from(cert)));
         console.log("Parsed Certificates: ", certificates.length);
+        for(let i = 0; i < certificates.length; i++) {
+            console.log(`CERTIFICATE ${i + 1}\n: `, certificates[i]);
+        }
         return certificates;
     
     } catch (error) {
@@ -217,7 +220,7 @@ function parseAttestationExtension(cert) {
 app.post('/submit-certificate', async (req, res) => {
     try {
         const base64Cert = req.body.CertificateChain.trim();
-        console.log('Received PEM certificate chain from request body:', base64Cert);
+        console.log('Received PEM certificate chain from request body');
         const cert = parseCertificateChain(base64Cert);
 
         const chainValid = await verifyCertificateChain(cert);
