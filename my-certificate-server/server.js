@@ -36,10 +36,11 @@ class KeyDescription {
     constructor(reader) {
         try {
             if (reader.readSequence()) {
-                this.attestationVersion = reader.readInt();  // Static value as per your schema
-                this.attestationSecurityLevel = reader.readEnumeration();  // Reading ENUMERATED SecurityLevel
-                this.keyMintVersion = reader.readInt();  // Reading INTEGER
-                this.keyMintSecurityLevel = reader.readEnumeration();  // Reading ENUMERATED SecurityLevel
+                this.attestationVersion = this.AttestationVersion(reader.readInt());  // Static value as per your schema
+                this.attestationSecurityLevel = this.SecurityLevel(reader.readEnumeration());  // Reading ENUMERATED SecurityLevel
+
+                this.keyMasterVersion = this.KeyMasterVersion(reader.readInt());  // Reading INTEGER
+                this.keyMintSecurityLevel = this.SecurityLevel(reader.readEnumeration());  // Reading ENUMERATED SecurityLevel
                 this.attestationChallenge = reader.readString(0x04, true);  // Reading OCTET_STRING
                 this.uniqueId = reader.readString(0x04, true);  // Reading OCTET_STRING
             }
@@ -50,7 +51,63 @@ class KeyDescription {
         }
     }
 
+    SecurityLevel(secLevel){
+        switch(secLevel){
+            case 0:
+                return 'Software';
+            case 1:
+                return 'TrustedEnvironment';
+            case 2:
+                return 'StrongBox';
+            default:
+                return 'Unknown';
+        }
+    }
+
+    KeyMasterVersion(version){
+        switch(version){
+            case 0:
+                return 'Keymaster version 0.2 or 0.3';
+            case 1:
+                return 'Keymaster version 1.0';
+            case 2:
+                return 'Keymaster version 2.0';
+            case 3:
+                return 'Keymaster version 3.0';
+            case 4:
+                return 'Keymaster version 4.0';
+            case 41:
+                return 'Keymaster version 4.1';
+            case 100:
+                return 'KeyMint version 1.0';
+            case 200:
+                return 'KeyMint version 2.0';
+            default:
+                return 'Unknown';
+        }
+    }
+
+    AttestationVersion(version){
+        switch(version){
+
+            case 1:
+                return 'Keymaster version 2.0';
+            case 2:
+                return 'Keymaster version 3.0';
+            case 3:
+                return 'Keymaster version 4.0';
+            case 4:
+                return 'Keymaster version 4.1';
+            case 100:
+                return 'KeyMint version 1.0';
+            case 200:
+                return 'KeyMint version 2.0';
+            default:
+                return 'Unknown';
+        }
+    }
 }
+
 
 
 
