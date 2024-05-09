@@ -54,18 +54,48 @@ class KeyDescription {
     parseAuthorizationList(reader) {
         let list = {};
         if (reader.readSequence()) {
-            // You should add checks if each field is available (optional)
-            // and also read according to tag numbers.
-            // For simplicity, here's a rough draft on how you might read some fields.
-            list.purpose = reader.readTag(1) ? reader.readSet() : undefined;
-            list.algorithm = reader.readTag(2) ? reader.readInt() : undefined;
-            list.keySize = reader.readTag(3) ? reader.readInt() : undefined;
-            // Add similar entries for other fields, respecting optional and explicit tagging
+            // Parse each field with explicit tagging
+            list.purpose = reader.peekTag(0xA1) ? reader.readSetOfIntegers() : undefined; // [1] EXPLICIT SET OF INTEGER
+            list.algorithm = reader.peekTag(0x82) ? reader.readInt() : undefined; // [2] EXPLICIT INTEGER
+            list.keySize = reader.peekTag(0x83) ? reader.readInt() : undefined; // [3] EXPLICIT INTEGER
+            list.digest = reader.peekTag(0x85) ? reader.readSetOfIntegers() : undefined; // [5] EXPLICIT SET OF INTEGER
+            list.padding = reader.peekTag(0x86) ? reader.readSetOfIntegers() : undefined; // [6] EXPLICIT SET OF INTEGER
+            list.ecCurve = reader.peekTag(0x8A) ? reader.readInt() : undefined; // [10] EXPLICIT INTEGER
+            list.rsaPublicExponent = reader.peekTag(0xC8) ? reader.readInt() : undefined; // [200] EXPLICIT INTEGER
+            list.mgfDigest = reader.peekTag(0xCB) ? reader.readSetOfIntegers() : undefined; // [203] EXPLICIT SET OF INTEGER
 
-            // Example for how deeper nested structures might be handled
-            if (reader.readTag(704)) {  // RootOfTrust, if present
-                list.rootOfTrust = this.parseRootOfTrust(reader);
-            }
+            // Handling NULL type explicit tagging
+            list.rollbackResistance = reader.peekTag(0x92F) ? reader.readNull() : undefined; // [303] EXPLICIT NULL
+            list.earlyBootOnly = reader.peekTag(0x931) ? reader.readNull() : undefined; // [305] EXPLICIT NULL
+            // Continue with other optional fields, checking tags and reading appropriate data types
+            list.activeDateTime = reader.peekTag(0x898) ? reader.readInt() : undefined;
+            list.originationExpireDateTime = reader.peekTag(0x899) ? reader.readInt() : undefined;
+            list.usageExpireDateTime = reader.peekTag(0x89A) ? reader.readInt() : undefined;
+            list.usageCountLimit = reader.peekTag(0x89D) ? reader.readInt() : undefined;
+            list.noAuthRequired = reader.peekTag(0x9EF) ? reader.readNull() : undefined;
+            list.userAuthType = reader.peekTag(0x9F0) ? reader.readInt() : undefined;
+            list.authTimeout = reader.peekTag(0x9F1) ? reader.readInt() : undefined;
+            list.allowWhileOnBody = reader.peekTag(0x9F2) ? reader.readNull() : undefined;
+            list.trustedUserPresenceRequired = reader.peekTag(0x9F3) ? reader.readNull() : undefined;
+            list.trustedConfirmationRequired = reader.peekTag(0x9F4) ? reader.readNull() : undefined;
+            list.unlockedDeviceRequired = reader.peekTag(0x9F5) ? reader.readNull() : undefined;
+            list.creationDateTime = reader.peekTag(0xAF5) ? reader.readInt() : undefined;
+            list.origin = reader.peekTag(0xAF6) ? reader.readInt() : undefined;
+            list.rootOfTrust = reader.peekTag(0xAF8) ? this.parseRootOfTrust(reader) : undefined;
+            list.osVersion = reader.peekTag(0xAF9) ? reader.readInt() : undefined;
+            list.osPatchLevel = reader.peekTag(0xAFA) ? reader.readInt() : undefined;
+            list.attestationApplicationId = reader.peekTag(0xAFD) ? reader.readString(0x04, true) : undefined;
+            list.attestationIdBrand = reader.peekTag(0xAFE) ? reader.readString(0x04, true) : undefined;
+            list.attestationIdDevice = reader.peekTag(0xAFF) ? reader.readString(0x04, true) : undefined;
+            list.attestationIdProduct = reader.peekTag(0xB00) ? reader.readString(0x04, true) : undefined;
+            list.attestationIdSerial = reader.peekTag(0xB01) ? reader.readString(0x04, true) : undefined;
+            list.attestationIdImei = reader.peekTag(0xB02) ? reader.readString(0x04, true) : undefined;
+            list.attestationIdMeid = reader.peekTag(0xB03) ? reader.readString(0x04, true) : undefined;
+            list.attestationIdManufacturer = reader.peekTag(0xB04) ? reader.readString(0x04, true) : undefined;
+            list.attestationIdModel = reader.peekTag(0xB05) ? reader.readString(0x04, true) : undefined;
+            list.vendorPatchLevel = reader.peekTag(0xB06) ? reader.readInt() : undefined;
+            list.bootPatchLevel = reader.peekTag(0xB07) ? reader.readInt() : undefined;
+            list.deviceUniqueAttestation = reader.peekTag(0xB08) ? reader.readNull() : undefined;
         }
         return list;
     }
@@ -75,7 +105,7 @@ class KeyDescription {
         if (reader.readSequence()) {
             root.verifiedBootKey = reader.readString(0x04, true);
             root.deviceLocked = reader.readBoolean();
-            root.verifiedBootState = reader.readEnumeration();
+            root.verifiedBootState = reader.readEnum();
             root.verifiedBootHash = reader.readString(0x04, true);
         }
         return root;
