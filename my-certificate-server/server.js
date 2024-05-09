@@ -36,6 +36,19 @@ const GOOGLE_ROOT_KEY =
 'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==' +
 "\n-----END PUBLIC KEY-----";
 
+const KeyDescription = asn1.define('KeyDescription', function() {
+    this.seq().obj(
+        this.key('attestationVersion').int(),
+        this.key('attestationSecurityLevel').int(),
+        this.key('keyMintVersion').int(),
+        this.key('keyMintSecurityLevel').int(),
+        this.key('attestationChallenge').octstr(),
+        this.key('uniqueId').octstr(),
+        this.key('softwareEnforced').explicit(0).use(AuthorizationList),
+        this.key('hardwareEnforced').explicit(1).use(AuthorizationList)
+    );
+});
+
 //WORKS
 function parseCertificateChain(chain) {
     try {
@@ -140,10 +153,8 @@ function parseAttestationExtension(cert) {
 
         console.log('Key attestation extension ', keyDescriptionExt);
         // Parsing the extension as ASN.1
-        const asn1 = ASN1.decode(Buffer.from(keyDescriptionExt.value, 'base64'));
-        const keyDescription = parseKeyDescription(asn1);
-
-        return keyDescription;
+        const decoded = KeyDescription.decode(keyDescriptionExt, 'der');  // 'der' is the encoding format
+        return decoded;
     } catch (error) {
         console.error('Error parsing attestation extension:', error);
         throw error;
