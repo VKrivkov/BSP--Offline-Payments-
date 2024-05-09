@@ -188,7 +188,19 @@ async function verifyCertificateChain(certificates) {
                     console.warn(`Certificate with serial ${serialNumber} is not properly signed by its issuer.`);
                     allValid = false; // Mark as invalid if not properly signed
                 }
+                else {
+                    console.log(`Certificate with serial ${serialNumber} is signed by the next certificate.`);
+                }
+            } else {
+                // Check if the last certificate is self-signed
+                if (!certObj.verify(certObj.publicKey)) {
+                    console.warn(`The root certificate with serial ${serialNumber} is not self-signed.`);
+                    allValid = false; // Mark as invalid if not self-signed
+                } else {
+                    console.log(`The root certificate with serial ${serialNumber} is self-signed.`);
+                }
             }
+            
         }
 
         return allValid; // Return true if all certificates are valid, false otherwise
