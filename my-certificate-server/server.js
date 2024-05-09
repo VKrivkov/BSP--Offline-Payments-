@@ -10,7 +10,9 @@ const port = 3456;
 app.use(bodyParser.json());
 
 const { Certificate } = require('@fidm/x509');
-const asn1 = require('asn1.js')
+const asn1 = require('asn1');
+const Ber = asn1.Ber;
+
 
 const GOOGLE_ROOT_KEY =
 "-----BEGIN PUBLIC KEY-----\n" +
@@ -212,18 +214,14 @@ function parseAttestationExtension(cert) {
         }
         console.log('Key attestation extension ', keyDescriptionExt);
 
-        const hexString = keyDescriptionExt.value.toString('hex');
+        const reader = new Ber.Reader(keyDescriptionExt.value);
 
-        const asn1Buffer = Buffer.from(hexString, 'hex');
+        while(reader.readSequence()) {
+            console.log('Tag: ', reader.peek());
+            // Based on the tag, process each item
+        }
 
-        var result = KeyDescription.decode(asn1Buffer, 'der', keyDescriptionExt);
-        console.log(result);
-
-
-
-        console.log('Decoded attestation:', result);
-
-        return result;
+        return null;
         
     } catch (error) {
         console.error('Error parsing attestation extension:', error);
