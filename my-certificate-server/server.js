@@ -47,14 +47,15 @@ function parseCertificateChain(chain) {
 
         console.log("Individual Certificates: ", certs.length);
 
-        for(let i = 0; i < certs.length; i++) {
-            console.log(`Certificate ${i + 1}: `, certs[i]);
-        }
+ 
 
         // Parse each certificate
         const certificates = certs.map(cert => Certificate.fromPEM(Buffer.from(cert)));
         console.log("Parsed Certificates: ", certificates.length);
 
+        for(let i = 0; i < certificates.length; i++) {
+            console.log(`Certificate ${i + 1}: `, certificates[i]);
+        }
         return certificates;
     
     } catch (error) {
