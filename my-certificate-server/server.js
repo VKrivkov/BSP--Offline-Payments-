@@ -36,7 +36,7 @@ const BerWriter = asn1.Ber.Writer;
 class SecurityLevel {
     constructor(reader) {
         if (reader.readSequence()) {
-            this.level = reader.readEnumeration();
+            this.level = reader.readInt();
         }
     }
 }
