@@ -221,8 +221,7 @@ function parseAttestationExtension(cert) {
         const buffer = keyDescriptionExt.value;
         try {
             // Forge uses its own ASN.1 implementation to parse the buffer
-            const derBuffer = forge.util.createBuffer(buffer, 'binary');
-
+            const derBuffer = forge.util.createBuffer(Buffer.from(keyDescriptionExt.value).toString('binary'), 'binary');
             // Decode the DER buffer to an ASN.1 object
             const asn1 = forge.asn1.fromDer(derBuffer);
             
