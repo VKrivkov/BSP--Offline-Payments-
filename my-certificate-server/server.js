@@ -217,13 +217,12 @@ function parseAttestationExtension(cert) {
 
         const hexString = keyDescriptionExt.value.toString('hex');
 
-        // Decode using forge from hex
-        const asn1 = forge.asn1.fromDer(forge.util.hexToBytes(hexString));
+        const asn1Buffer = Buffer.from(hexString, 'hex');
+        const result = KeyDescription.decode(asn1Buffer, 'der');
 
-        // Log the full ASN.1 structure to understand the contents
-        console.log(forge.asn1.prettyPrint(asn1));
+        console.log('Decoded attestation:', result);
 
-        return asn1; 
+        return result;
         
     } catch (error) {
         console.error('Error parsing attestation extension:', error);
