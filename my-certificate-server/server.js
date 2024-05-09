@@ -41,7 +41,7 @@ class KeyDescription {
 
                 this.keyMasterVersion = this.KeyMasterVersion(reader.readInt());  // Reading INTEGER
                 this.keyMintSecurityLevel = this.SecurityLevel(reader.readEnumeration());  // Reading ENUMERATED SecurityLevel
-                this.attestationChallenge = reader.readString(0x04, true);  // Reading OCTET_STRING
+                this.attestationChallenge = this.AttestationChallenge(reader.readString(0x04, true));  // Reading OCTET_STRING
                 this.uniqueId = reader.readString(0x04, true);  // Reading OCTET_STRING
             }
         } catch (error) {
@@ -105,6 +105,11 @@ class KeyDescription {
             default:
                 return 'Unknown';
         }
+    }
+
+    AttestationChallenge(challenge){
+        return challenge.toString('utf-8');
+
     }
 }
 
@@ -171,7 +176,17 @@ async function verifyCertificateChain(certificates) {
                     allValid = false; // If any certificate is revoked, set allValid to false
                 }
             } else {
-                console.log(`Certificate with serial ${serialNumber} is valid.`);
+                console.log(`Certificate with serial ${serialNumber} is NOT revoked.`);
+            }
+        }
+
+        if (i < certificates.length - 1) {
+            const issuerCertObj = new crypto.X509Certificate(certificates[i + 1].raw);
+
+            // Verify current certificate using issuer's public key
+            if (!cert.verify(issuerCertObj.publicKey)) {
+                console.warn(`Certificate with serial ${serialNumber} is not properly signed by its issuer.`);
+                allValid = false; // Mark as invalid if not properly signed
             }
         }
 
