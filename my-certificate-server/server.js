@@ -35,7 +35,7 @@ class KeyDescription {
     constructor(reader) {
         try {
             if (reader.readSequence()) {
-                this.attestationVersion = 200;  // Static value as per your schema
+                this.attestationVersion = readInt();  // Static value as per your schema
                 this.attestationSecurityLevel = reader.readEnumeration();  // Reading ENUMERATED SecurityLevel
                 this.keyMintVersion = reader.readInt();  // Reading INTEGER
                 this.keyMintSecurityLevel = reader.readEnumeration();  // Reading ENUMERATED SecurityLevel
