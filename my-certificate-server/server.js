@@ -223,7 +223,7 @@ function parseAttestationExtension(cert) {
         console.log('Decoder type:', typeof KeyDescription);
         console.log('Decode method available:', KeyDescription.decode);
 
-        const decoded = KeyDescription.decode(buffer, 'der');  // 'der' is the encoding format
+        const decoded = KeyDescription.decode.bind(buffer, 'der');  // 'der' is the encoding format
       
 
         console.log('Key attestation extension DECODED: ', decoded);
