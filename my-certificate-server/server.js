@@ -50,6 +50,21 @@ const KeyDescription = asn1.define('KeyDescription', function() {
     );
 });
 
+const AuthorizationList = asn1.define('AuthorizationList', function() {
+    this.seq().obj(
+        this.key('purpose').explicit(1).setof('int').optional(),
+        this.key('algorithm').explicit(2).int().optional(),
+        this.key('keySize').explicit(3).int().optional(),
+        this.key('digest').explicit(5).setof('int').optional(),
+        this.key('padding').explicit(6).setof('int').optional(),
+        this.key('ecCurve').explicit(10).int().optional(),
+        this.key('rsaPublicExponent').explicit(200).int().optional(),
+        this.key('rollbackResistance').explicit(303).null_().optional(),
+        this.key('earlyBootOnly').explicit(305).null_().optional(),
+        // Add other fields as needed
+    );
+});
+
 //WORKS
 function parseCertificateChain(chain) {
     try {
@@ -155,6 +170,7 @@ function parseAttestationExtension(cert) {
         console.log('Key attestation extension ', keyDescriptionExt);
         // Parsing the extension as ASN.1
         const decoded = KeyDescription.decode(keyDescriptionExt, 'der');  // 'der' is the encoding format
+        console.log('Key attestation extension DOCEODED: ', decoded);
         return decoded;
     } catch (error) {
         console.error('Error parsing attestation extension:', error);
@@ -162,42 +178,6 @@ function parseAttestationExtension(cert) {
     }
 }
 
-function parseKeyDescription(asn1) {
-    // Extract data from ASN.1 structure according to the schema provided in the documentation
-    let result = {
-        attestationVersion: asn1.sub[0].content(),
-        attestationSecurityLevel: parseSecurityLevel(asn1.sub[1].content()),
-        keyMintVersion: asn1.sub[2].content(),
-        keyMintSecurityLevel: parseSecurityLevel(asn1.sub[3].content()),
-        attestationChallenge: asn1.sub[4].content(),
-        uniqueId: asn1.sub[5].content(),
-        softwareEnforced: parseAuthorizationList(asn1.sub[6]),
-        hardwareEnforced: parseAuthorizationList(asn1.sub[7])
-    };
-    return result;
-}
-
-function parseSecurityLevel(level) {
-    switch (level) {
-        case 0:
-            return 'Software';
-        case 1:
-            return 'TrustedEnvironment';
-        case 2:
-            return 'StrongBox';
-        default:
-            return 'Unknown';
-    }
-}
-
-function parseAuthorizationList(asn1) {
-    // Parse each field in the AuthorizationList
-    let list = {};
-    asn1.sub.forEach(element => {
-        list[element.tag] = element.content();
-    });
-    return list;
-}
 
 // Function to handle incoming certificates
 app.post('/submit-certificate', async (req, res) => {
