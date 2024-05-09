@@ -138,6 +138,7 @@ function parseAttestationExtension(cert) {
             throw new Error('Key attestation extension not found');
         }
 
+        console.log('Key attestation extension ', keyDescriptionExt);
         // Parsing the extension as ASN.1
         const asn1 = ASN1.decode(Buffer.from(keyDescriptionExt.value, 'base64'));
         const keyDescription = parseKeyDescription(asn1);
