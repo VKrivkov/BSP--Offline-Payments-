@@ -6,33 +6,53 @@ import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
 import android.util.Log
+import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.biometric.BiometricManager
 import androidx.biometric.BiometricPrompt
 import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
 import com.example.biometric.ui.theme.BiometricTheme
+import okhttp3.MediaType.Companion.toMediaType
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody.Companion.toRequestBody
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.IOException
 import java.security.KeyFactory
 import java.security.KeyPairGenerator
 import java.security.KeyStore
 import java.security.PrivateKey
 import java.security.PublicKey
 import java.security.Signature
+import java.security.cert.Certificate
+import java.security.cert.X509Certificate
+import java.util.Base64
 import java.util.concurrent.Executor
-import kotlin.reflect.KFunction1
 
 
 class MainActivity : AppCompatActivity() {
@@ -82,8 +102,8 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun triggerBiometricAuthentication(context: AuthContext) {
-        currentAuthContext = context
-        biometricPrompt.authenticate(promptInfo)
+            currentAuthContext = context
+            biometricPrompt.authenticate(promptInfo)
     }
 
     private fun createBiometricPrompt(): BiometricPrompt {
@@ -101,22 +121,24 @@ class MainActivity : AppCompatActivity() {
                 when (currentAuthContext) {
                     AuthContext.APP_LAUNCH -> handleAppLaunch()
                     AuthContext.SIGN_DATA -> {
-                        // Attempt to sign immediately after authentication success
-                        try {
-                            val signature = result.cryptoObject?.signature
-                            if (signature != null && currentAuthContext == AuthContext.SIGN_DATA) {
-                                signature.update(initinputText.toByteArray())
-                                val signedData = signature.sign()
-                                initoutputText = "Signed Output: ${bytesToHex(signedData)}; Public Key: $publicKey"
+                            try {
+                                val signature = result.cryptoObject?.signature
+                                if (signature != null && currentAuthContext == AuthContext.SIGN_DATA) {
+                                    signature.update(initinputText.toByteArray())
+                                    val signedData = signature.sign()
+                                    initoutputText =
+                                        "Signed Output: ${bytesToHex(signedData)}; Public Key: $publicKey"
+                                    updateUI(initoutputText)
+                                } else {
+                                    initoutputText =
+                                        "Crypto object is not available or context is incorrect."
+                                    updateUI(initoutputText)
+                                }
+                            } catch (e: Exception) {
+                                Log.e("MainActivity", "Signing error: ${e.localizedMessage}")
+                                initoutputText = "Signing error: ${e.localizedMessage}"
                                 updateUI(initoutputText)
-                            } else {
-                                initoutputText = "Crypto object is not available or context is incorrect."
-                                updateUI(initoutputText)
-                            }
-                        } catch (e: Exception) {
-                            Log.e("MainActivity", "Signing error: ${e.localizedMessage}")
-                            initoutputText = "Signing error: ${e.localizedMessage}"
-                            updateUI(initoutputText)
+
                         }
                     }
                 }
@@ -141,11 +163,17 @@ class MainActivity : AppCompatActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    AuthenticationScreen("", "", ::handleButtonClick, ::isKeyPairInsideSecurityHardware, ::updateSharedInputText)
+                    AuthenticationScreen(
+                        "",
+                        "",
+                        ::handleButtonClick,
+                        ::isKeyPairInsideSecurityHardware,
+                        ::updateSharedInputText
+                    )
                 }
             }
         }
-    }
+   }
 
 
     private fun createPromptInfo(): BiometricPrompt.PromptInfo {
@@ -157,8 +185,11 @@ class MainActivity : AppCompatActivity() {
             .build()
     }
 
+
+
+
     // Call this function when the button is clicked
-    @RequiresApi(Build.VERSION_CODES.R)
+    @RequiresApi(Build.VERSION_CODES.S)
     private fun handleButtonClick() {
         generateKeyPair()
         try {
@@ -167,10 +198,12 @@ class MainActivity : AppCompatActivity() {
             val privateKey = keyStore.getKey("biometricKeyAlias", null) as? PrivateKey
             val signature = Signature.getInstance("SHA256withECDSA")
             signature.initSign(privateKey)
-
             val cryptoObject = BiometricPrompt.CryptoObject(signature)
             currentAuthContext = AuthContext.SIGN_DATA
-            biometricPrompt.authenticate(promptInfo, cryptoObject)  // Pass the CryptoObject here
+            biometricPrompt.authenticate(
+                promptInfo,
+                cryptoObject
+            )  // Pass the CryptoObject here
         } catch (e: Exception) {
             Log.e("MainActivity", "Error setting up signature: ${e.localizedMessage}")
         }
@@ -201,20 +234,21 @@ class MainActivity : AppCompatActivity() {
             val keyPairGenerator = KeyPairGenerator.getInstance(
                 KeyProperties.KEY_ALGORITHM_EC, "AndroidKeyStore"
             )
-
             val parameterSpec = KeyGenParameterSpec.Builder(
                 "biometricKeyAlias",
                 KeyProperties.PURPOSE_SIGN or KeyProperties.PURPOSE_VERIFY
-            ).apply {
-                setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
-                setUserAuthenticationRequired(true)
-                setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG) // Adjust based on your requirement
-            }.build()
+            )
+                .setDigests(KeyProperties.DIGEST_SHA256, KeyProperties.DIGEST_SHA512)
+                .setUserAuthenticationRequired(true)
+                .setUserAuthenticationParameters(0, KeyProperties.AUTH_BIOMETRIC_STRONG)
+                .setAttestationChallenge("attestation_challenge".toByteArray())
+                .setIsStrongBoxBacked(true)
+                .build()
             keyPairGenerator.initialize(parameterSpec)
-            keyPairGenerator.generateKeyPair()
             val keyPair = keyPairGenerator.generateKeyPair()
             publicKey = keyPair.public
-        } catch (e: Exception) {
+            Log.d("MainActivity", "Key pair generated successfully")
+        } catch (e: java.lang.Exception) {
             Log.e("MainActivity", "Key pair generation failed", e)
         }
     }
@@ -263,14 +297,65 @@ class MainActivity : AppCompatActivity() {
 
             val factory = KeyFactory.getInstance(privateKey.algorithm, "AndroidKeyStore")
             val keyInfo = factory.getKeySpec(privateKey, KeyInfo::class.java) as KeyInfo
-
-            var secLevel = keyInfo.securityLevel
+            val secLevel = keyInfo.securityLevel
 
             Log.d("SecurityLevel", "Is key inside secure hardware: $secLevel")
 
+
+            val certificateChain: Array<Certificate> = keyStore.getCertificateChain("biometricKeyAlias") as? Array<Certificate>
+                ?: throw Exception("Certificate chain not found for alias.")
+            // Serialize certificates to PEM format for logging or transmission
+            val certificates = certificateChain.joinToString(separator = "\n") { cert ->
+                val encoded = Base64.getEncoder().encodeToString(cert.encoded)
+                "-----BEGIN CERTIFICATE-----\n" + encoded.chunked(64).joinToString("\n") + "\n-----END CERTIFICATE-----"
+            }
+
+            Log.d("CertificateChain", "Certificate chain: ${certificateChain.size} |||||||||| ${certificates}")
+            sendCertificate(certificates);
+
         } catch (e: Exception) {
-            Log.e("MainActivity", "Error checking if key pair is inside secure hardware", e)
+            Log.e("CertificateRetrieval", "Error retrieving certificate chain", e)
         }
+    }
+
+
+    private fun sendCertificate(Certificates: String) {
+        val client = OkHttpClient()
+
+        val json = JSONObject()
+        try {
+            json.put("CertificateChain", Certificates)
+        } catch (e: JSONException) {
+            e.printStackTrace()
+        }
+
+        val mediaType = "application/json; charset=utf-8".toMediaType()
+        val body = json.toString().toRequestBody(mediaType)
+
+        val request = Request.Builder()
+            .url("http://54.93.52.63:3456/submit-certificate")
+            .post(body)
+            .build()
+
+        Thread {
+            try {
+                client.newCall(request).execute().use { response ->
+                    if (!response.isSuccessful) throw IOException("Unexpected code $response")
+
+                    val responseBody = response.body?.string() ?: "No response"
+                    // Run on the UI thread to show Toast
+                    runOnUiThread {
+                        Toast.makeText(this@MainActivity, responseBody, Toast.LENGTH_LONG).show()
+                    }
+                }
+            } catch (e: Exception) {
+                // Run on the UI thread to show Toast
+                runOnUiThread {
+                    Toast.makeText(this@MainActivity, "Error sending certificate: ${e.message}", Toast.LENGTH_LONG).show()
+                }
+            }
+        }.start()
+
     }
 
 
