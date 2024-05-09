@@ -79,9 +79,9 @@ class KeyDescription {
                 this.keyMintVersion = reader.readEnumeration();
                 this.keyMintSecurityLevel = reader.readString(asn1.Ber.OctetString, true);
                 this.attestationChallenge = reader.readString(asn1.Ber.OctetString, true);
-                this.uniqueId = reader.readString(asn1.Ber.OctetString, true);
-                this.softwareEnforced = new AuthorizationList(reader);
-                this.hardwareEnforced = new AuthorizationList(reader);
+                //this.uniqueId = reader.readString(asn1.Ber.OctetString, true);
+                //this.softwareEnforced = new AuthorizationList(reader);
+                //this.hardwareEnforced = new AuthorizationList(reader);
             }
         } catch (error) {
             console.error('Failed to parse KeyDescription:', error);
