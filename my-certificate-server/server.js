@@ -218,17 +218,20 @@ function parseAttestationExtension(cert) {
         console.log('Key attestation extension ', keyDescriptionExt);
         // Parsing the extension as ASN.1
         const buffer = keyDescriptionExt.value;
-        console.log('Key attestation extension BUFFER (hex): ', buffer.toString('hex'));
-
-        const decoded = KeyDescription.decode(buffer, 'der'); // 'der' is the encoding format
-      
-        console.log('Key attestation extension DECODED: ', decoded);
-        return decoded;
+        try {
+            // Forge uses its own ASN.1 implementation to parse the buffer
+            const asn1 = forge.asn1.fromDer(buffer);
+            // Custom function to handle specific schema parsing could be added here
+            return forge.asn1.prettyPrint(asn1);
+        } catch (error) {
+            console.error('Error parsing ASN.1 structure:', error);
+            throw error;
+        }
     } catch (error) {
         console.error('Error parsing attestation extension:', error);
         throw error;
     }
-}
+}   
 
 
 // Function to handle incoming certificates
