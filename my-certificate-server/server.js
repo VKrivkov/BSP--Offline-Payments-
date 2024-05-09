@@ -3,8 +3,6 @@ const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const CRL_URL = 'https://android.googleapis.com/attestation/status';
 const https = require('https');
-const forge = require('node-forge');
-
 const app = express();
 const port = 3456;
 
@@ -12,8 +10,7 @@ const port = 3456;
 app.use(bodyParser.json());
 
 const { Certificate } = require('@fidm/x509');
-const asn1 = require('asn1.js');
-
+const asn1 = require('asn1.js')
 
 const GOOGLE_ROOT_KEY =
 "-----BEGIN PUBLIC KEY-----\n" +
