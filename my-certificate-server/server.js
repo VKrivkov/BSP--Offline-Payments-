@@ -30,6 +30,61 @@ const GOOGLE_ROOT_KEY =
 'NpUFgNPN9PvQi8WEg5UmAGMCAwEAAQ==' +
 "\n-----END PUBLIC KEY-----";
 
+const BerReader = asn1.Ber.Reader;
+const BerWriter = asn1.Ber.Writer;
+
+class SecurityLevel {
+    constructor(reader) {
+        if (reader.readSequence()) {
+            this.level = reader.readInt();
+        }
+    }
+}
+
+class AuthorizationList {
+    constructor(reader) {
+        if (reader.readSequence()) {
+            // You need to implement the parsing logic for each field
+            this.purpose = []; // This should be parsed according to the EXPLICIT tag and data type
+            // Repeat for other fields
+        }
+    }
+}
+
+class RootOfTrust {
+    constructor(reader) {
+        if (reader.readSequence()) {
+            this.verifiedBootKey = reader.readString(asn1.Ber.OctetString, true);
+            this.deviceLocked = reader.readBoolean();
+            this.verifiedBootState = new VerifiedBootState(reader);
+            this.verifiedBootHash = reader.readString(asn1.Ber.OctetString, true);
+        }
+    }
+}
+
+class VerifiedBootState {
+    constructor(reader) {
+        if (reader.readSequence()) {
+            this.state = reader.readInt();
+        }
+    }
+}
+
+class KeyDescription {
+    constructor(reader) {
+        if (reader.readSequence()) {
+            this.attestationVersion = reader.readInt();
+            this.attestationSecurityLevel = new SecurityLevel(reader);
+            this.keyMintVersion = reader.readInt();
+            this.keyMintSecurityLevel = new SecurityLevel(reader);
+            this.attestationChallenge = reader.readString(asn1.Ber.OctetString, true);
+            this.uniqueId = reader.readString(asn1.Ber.OctetString, true);
+            this.softwareEnforced = new AuthorizationList(reader);
+            this.hardwareEnforced = new AuthorizationList(reader);
+        }
+    }
+}
+
 //WORKS
 function parseCertificateChain(chain) {
     try {
@@ -133,11 +188,15 @@ function parseAttestationExtension(cert) {
 
         const reader = new Ber.Reader(keyDescriptionExt.value);
 
+
         while(reader.readSequence()) {
             console.log('Tag: ', reader.peek());
             // Based on the tag, process each item
         }
 
+
+        const keyDescription = new KeyDescription(reader);
+        console.log(keyDescription);
         return null;
         
     } catch (error) {
