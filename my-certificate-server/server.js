@@ -72,15 +72,16 @@ class VerifiedBootState {
 
 class KeyDescription {
     constructor(reader) {
-        if (reader.readSequence()) {
-            this.attestationVersion = reader.readInt();
-            this.attestationSecurityLevel = new SecurityLevel(reader);
-            this.keyMintVersion = reader.readInt();
-            this.keyMintSecurityLevel = new SecurityLevel(reader);
-            this.attestationChallenge = reader.readString(asn1.Ber.OctetString, true);
-            this.uniqueId = reader.readString(asn1.Ber.OctetString, true);
-            this.softwareEnforced = new AuthorizationList(reader);
-            this.hardwareEnforced = new AuthorizationList(reader);
+        try {
+            if (reader.readSequence()) {
+                this.attestationVersion = reader.readInt();
+                this.attestationSecurityLevel = new SecurityLevel(reader);
+            }
+        } catch (error) {
+            console.error('Failed to parse KeyDescription:', error);
+            console.log('Reader offset:', reader.offset);
+            console.log('Remaining bytes:', reader.length - reader.offset);
+            throw error;
         }
     }
 }
@@ -191,13 +192,10 @@ function parseAttestationExtension(cert) {
 
         while(reader.readSequence()) {
             console.log('Tag: ', reader.peek());
-            // Based on the tag, process each item
         }
 
-
         const keyDescription = new KeyDescription(reader);
-        console.log(keyDescription);
-        return null;
+        console.log('Parsed Key Description:', keyDescription);
         
     } catch (error) {
         console.error('Error parsing attestation extension:', error);
