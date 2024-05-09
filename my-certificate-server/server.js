@@ -219,7 +219,7 @@ function parseAttestationExtension(cert) {
 
         const asn1Buffer = Buffer.from(hexString, 'hex');
 
-        var result = KeyDescription.decode(asn1Buffer, 'der', );
+        var result = KeyDescription.decode(asn1Buffer, 'der', keyDescriptionExt);
         console.log(result);
 
 
