@@ -36,7 +36,7 @@ const BerWriter = asn1.Ber.Writer;
 class SecurityLevel {
     constructor(reader) {
         if (reader.readSequence()) {
-            this.level = reader.readIntOrEnum();
+            this.level = KeyDescription.readIntOrEnum();
         }
     }
 }
@@ -65,7 +65,7 @@ class RootOfTrust {
 class VerifiedBootState {
     constructor(reader) {
         if (reader.readSequence()) {
-            this.state = reader.readIntOrEnum();
+            this.state = KeyDescription.readIntOrEnum();
         }
     }
 }
