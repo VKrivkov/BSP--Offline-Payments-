@@ -109,7 +109,7 @@ function verifyCertificateChain(certificates) {
     }).catch((error) => {
         console.error('Error verifying certificate chain:', error);
     });
-
+    console.log("The chain is valid: ", validity);
     return validity
 }
 
@@ -141,7 +141,6 @@ app.post('/submit-certificate', async (req, res) => {
         console.log('Received PEM certificate chain from request body:', base64Cert);
         const cert = parseCertificateChain(base64Cert);
 
-        //const rootValid = verifyRootPublicKey(base64Cert);
         const chainValid = verifyCertificateChain(cert);
         //const attestationDetails = parseAttestationExtension(cert);
         const RootCert = cert[cert.length-1];
@@ -149,7 +148,6 @@ app.post('/submit-certificate', async (req, res) => {
         for(i = 0; i < cert.length; i++)
             console.log("KEY", i, ":", cert[i].publicKey.toPEM());
 
-        console.log("The chain is valid: ", chainValid);
         rootValid = verifyRootPublicKey(RootCert.publicKey.toPEM())
         console.log("Root PK verified: ", rootValid);
 
