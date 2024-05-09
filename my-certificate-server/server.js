@@ -36,7 +36,7 @@ const BerWriter = asn1.Ber.Writer;
 class SecurityLevel {
     constructor(reader) {
         if (reader.readSequence()) {
-            this.level = reader.readEnumeration(asn1.Ber.Enumerated);
+            this.level = reader.readEnumeration();
         }
     }
 }
@@ -65,7 +65,7 @@ class RootOfTrust {
 class VerifiedBootState {
     constructor(reader) {
         if (reader.readSequence()) {
-            this.state = reader.readEnumeration(asn1.Ber.Enumerated);
+            this.state = reader.readEnumeration();
         }
     }
 }
@@ -74,9 +74,9 @@ class KeyDescription {
     constructor(reader) {
         try {
             if (reader.readSequence()) {
-                this.attestationVersion = reader.readEnumeration(asn1.Ber.Enumerated);
+                this.attestationVersion = reader.readInt()
                 this.attestationSecurityLevel = new SecurityLevel(reader);
-                this.keyMintVersion = treader.readEnumeration(asn1.Ber.Enumerated);
+                this.keyMintVersion = treader.readEnumeration();
                 this.keyMintSecurityLevel = new SecurityLevel(reader);
                 this.attestationChallenge = reader.readString(asn1.Ber.OctetString, true);
                 this.uniqueId = reader.readString(asn1.Ber.OctetString, true);
