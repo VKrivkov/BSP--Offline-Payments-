@@ -55,7 +55,7 @@ class KeyDescription {
     parseAuthorizationList(reader) {
         let list = {};
         if (reader.readSequence()) {
-            while (reader.hasNext()) {  // Check if there are more elements in the sequence
+            while (reader.peek() != null) {  // Check if there are more elements in the sequence
                 let tag = reader.peek();  // Check the next tag
                 switch (tag) {
                     case 0xA1:  // Context-specific tag [1] for purpose
