@@ -3,6 +3,7 @@ const bodyParser = require('body-parser');
 const crypto = require('crypto');
 const CRL_URL = 'https://android.googleapis.com/attestation/status';
 const https = require('https');
+const forge = require('node-forge');
 
 const app = express();
 const port = 3456;
