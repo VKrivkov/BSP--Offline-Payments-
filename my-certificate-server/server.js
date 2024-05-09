@@ -52,70 +52,166 @@ class KeyDescription {
         }
     }
 
+
     parseAuthorizationList(reader) {
         let list = {};
         if (reader.readSequence()) {
             while (reader.peek() != null) {  // Check if there are more elements in the sequence
                 let tag = reader.peek();  // Check the next tag
                 switch (tag) {
-                    case 0xA1:  // Context-specific tag [1] for purpose
-                        list.purpose = reader.readSetOfIntegers();
+                    case asn1.Ber.Context(1):  // Context-specific tag [1] for purpose
+                        list.purpose = this.readIntSet(reader);
                         break;
-                    case 0x82:  // Context-specific tag [2] for algorithm
+                    case asn1.Ber.Context(2):  // Context-specific tag [2] for algorithm
                         list.algorithm = reader.readInt();
                         break;
-                    case 0x83:  // Context-specific tag [3] for keySize
+                    case asn1.Ber.Context(3):  // Context-specific tag [3] for keySize
                         list.keySize = reader.readInt();
                         break;
-                    case 0x85:  // Context-specific tag [5] for digest
-                        list.digest = reader.readSetOfIntegers();
+                    case asn1.Ber.Context(5):  // Context-specific tag [5] for digest
+                        list.digest = this.readIntSet(reader);
                         break;
-                    case 0x86:  // Context-specific tag [6] for padding
-                        list.padding = reader.readSetOfIntegers();
+                    case asn1.Ber.Context(6):  // Context-specific tag [6] for padding
+                        list.padding = this.readIntSet(reader);
                         break;
-                    case 0x8A:  // Context-specific tag [10] for ecCurve
+                    case asn1.Ber.Context(10):  // Context-specific tag [10] for ecCurve
                         list.ecCurve = reader.readInt();
                         break;
-                    case 0xC8:  // Context-specific tag [200] for rsaPublicExponent
+                    case asn1.Ber.Context(200):  // Context-specific tag [200] for rsaPublicExponent
                         list.rsaPublicExponent = reader.readInt();
                         break;
-                    case 0xCB:  // Context-specific tag [203] for mgfDigest
-                        list.mgfDigest = reader.readSetOfIntegers();
+                    case asn1.Ber.Context(203):  // Context-specific tag [203] for mgfDigest
+                        list.mgfDigest = this.readIntSet(reader);
                         break;
-                    case 0x12F:  // Context-specific tag [303] for rollbackResistance
+                    case asn1.Ber.Context(303):  // Context-specific tag [303] for rollbackResistance
                         list.rollbackResistance = reader.readNull();
                         break;
-                    case 0x131:  // Context-specific tag [305] for earlyBootOnly
+                    case asn1.Ber.Context(305):  // Context-specific tag [305] for earlyBootOnly
                         list.earlyBootOnly = reader.readNull();
                         break;
-                    case 0x190:  // Context-specific tag [400] for activeDateTime
+                    case asn1.Ber.Context(400):  // Context-specific tag [400] for activeDateTime
                         list.activeDateTime = reader.readInt();
                         break;
-                    case 0x191:  // Context-specific tag [401] for originationExpireDateTime
+                    case asn1.Ber.Context(401):  // Context-specific tag [401] for originationExpireDateTime
                         list.originationExpireDateTime = reader.readInt();
                         break;
-                    case 0x192:  // Context-specific tag [402] for usageExpireDateTime
+                    case asn1.Ber.Context(402):  // Context-specific tag [402] for usageExpireDateTime
                         list.usageExpireDateTime = reader.readInt();
                         break;
-                    case 0x195:  // Context-specific tag [405] for usageCountLimit
+                    case asn1.Ber.Context(405):  // Context-specific tag [405] for usageCountLimit
                         list.usageCountLimit = reader.readInt();
                         break;
-                    case 0x1F7:  // Context-specific tag [503] for noAuthRequired
+                    case asn1.Ber.Context(503):  // Context-specific tag [503] for noAuthRequired
                         list.noAuthRequired = reader.readNull();
                         break;
-                    case 0x1F8:  // Context-specific tag [504] for userAuthType
+                    case asn1.Ber.Context(504):  // Context-specific tag [504] for userAuthType
                         list.userAuthType = reader.readInt();
                         break;
-                    case 0x1F9:  // Context-specific tag [505] for authTimeout
+                    case asn1.Ber.Context(505):  // Context-specific tag [505] for authTimeout
                         list.authTimeout = reader.readInt();
                         break;
+                    case asn1.Ber.Context(506):  // Context-specific tag [506] for allowWhileOnBody
+                        list.allowWhileOnBody = reader.readNull();
+                        break;
+                    case asn1.Ber.Context(507):  // Context-specific tag [507] for trustedUserPresenceRequired
+                        list.trustedUserPresenceRequired = reader.readNull();
+                        break;
+                    case asn1.Ber.Context(508):  // Context-specific tag [508] for trustedConfirmationRequired
+                        list.trustedConfirmationRequired = reader.readNull();
+                        break;
+                    case asn1.Ber.Context(509):  // Context-specific tag [509] for unlockedDeviceRequired
+                        list.unlockedDeviceRequired = reader.readNull();
+                        break;
+                    case asn1.Ber.Context(701):  // Context-specific tag [701] for creationDateTime
+                        list.creationDateTime = reader.readInt();
+                        break;
+                    case asn1.Ber.Context(702):  // Context-specific tag [702] for origin
+                        list.origin = reader.readInt();
+                        break;
+                    case asn1.Ber.Context(704):  // Context-specific tag [704] for rootOfTrust
+                        list.rootOfTrust = this.parseRootOfTrust(reader);
+                        break;
+                    case asn1.Ber.Context(705):  // Context-specific tag [705] for osVersion
+                        list.osVersion = reader.readInt();
+                        break;
+                    case asn1.Ber.Context(706):  // Context-specific tag [706] for osPatchLevel
+                        list.osPatchLevel = reader.readInt();
+                        break;
+                    case asn1.Ber.Context(709):  // Context-specific tag [709] for attestationApplicationId
+                        list.attestationApplicationId = reader.readString(asn1.Ber.OctetString, true);
+                        break;
+                    case asn1.Ber.Context(710):  // Context-specific tag [710] for attestationIdBrand
+                        list.attestationIdBrand = reader.readString(asn1.Ber.OctetString, true);
+                        break;
+                    case asn1.Ber.Context(711):  // Context-specific tag [711] for attestationIdDevice
+                        list.attestationIdDevice = reader.readString(asn1.Ber.OctetString, true);
+                        break;
+                    case asn1.Ber.Context(712):  // Context-specific tag [712] for attestationIdProduct
+                        list.attestationIdProduct = reader.readString(asn1.Ber.OctetString, true);
+                        break;
+                    case asn1.Ber.Context(713):  // Context-specific tag [713] for attestationIdSerial
+                        list.attestationIdSerial = reader.readString(asn1.Ber.OctetString, true);
+                        break;
+                    case asn1.Ber.Context(714):  // Context-specific tag [714] for attestationIdImei
+                        list.attestationIdImei = reader.readString(asn1.Ber.OctetString, true);
+                        break;
+                    case asn1.Ber.Context(715):  // Context-specific tag [715] for attestationIdMeid
+                        list.attestationIdMeid = reader.readString(asn1.Ber.OctetString, true);
+                        break;
+                    case asn1.Ber.Context(716):  // Context-specific tag [716] for attestationIdManufacturer
+                        list.attestationIdManufacturer = reader.readString(asn1.Ber.OctetString, true);
+                        break;
+                    case asn1.Ber.Context(717):  // Context-specific tag [717] for attestationIdModel
+                        list.attestationIdModel = reader.readString(asn1.Ber.OctetString, true);
+                        break;
+                    case asn1.Ber.Context(718):  // Context-specific tag [718] for vendorPatchLevel
+                        list.vendorPatchLevel = reader.readInt();
+                        break;
+                    case asn1.Ber.Context(719):  // Context-specific tag [719] for bootPatchLevel
+                        list.bootPatchLevel = reader.readInt();
+                        break;
+                    case asn1.Ber.Context(720):  // Context-specific tag [720] for deviceUniqueAttestation
+                        list.deviceUniqueAttestation = reader.readNull();
+                        break;
                     default:
-                        reader.skip();  // Skip unknown tags
+                        reader.readByte();  // Skip unknown tags
                         break;
                 }
             }
         }
         return list;
+    }
+
+    readIntSet(reader) {
+        let intSet = [];
+        if (reader.readSequence()) {
+            while (reader.peek() === asn1.Ber.Integer) {
+                intSet.push(reader.readInt());
+            }
+        }
+        return intSet;
+    }
+
+    parseRootOfTrust(reader) {
+        let root = {};
+        if (reader.readSequence()) {
+            root.verifiedBootKey = reader.readString(asn1.Ber.OctetString, true);
+            root.deviceLocked = reader.readBoolean();
+            root.verifiedBootState = this.parseVerifiedBootState(reader);
+            root.verifiedBootHash = reader.readString(asn1.Ber.OctetString, true);
+        }
+        return root;
+    }
+
+    parseVerifiedBootState(reader) {
+        let stateValue = reader.readEnumeration();
+        switch (stateValue) {
+            case 0: return "Verified";
+            case 1: return "SelfSigned";
+            case 2: return "Unverified";
+            case 3: return "Failed";
+            default: return "Unknown";
+        }
     }
 }
 
