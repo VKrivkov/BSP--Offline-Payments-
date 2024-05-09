@@ -77,7 +77,7 @@ class KeyDescription {
                 this.attestationVersion = reader.readInt()
                 this.attestationSecurityLevel = new SecurityLevel(reader);
                 this.keyMintVersion = reader.readEnumeration();
-                this.keyMintSecurityLevel = new SecurityLevel(reader);
+                this.keyMintSecurityLevel = reader.readString(asn1.Ber.OctetString, true);
                 this.attestationChallenge = reader.readString(asn1.Ber.OctetString, true);
                 this.uniqueId = reader.readString(asn1.Ber.OctetString, true);
                 this.softwareEnforced = new AuthorizationList(reader);
