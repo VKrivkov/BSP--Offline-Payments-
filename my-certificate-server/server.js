@@ -247,7 +247,7 @@ app.post('/submit-certificate', async (req, res) => {
 
 
         await res.send({
-            message: 'Certificate processed successfully',
+            message: 'SUCCESS',
             rootValid,
             chainValid,
             attestationDetails
