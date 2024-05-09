@@ -1,11 +1,7 @@
 const express = require('express');
 const bodyParser = require('body-parser');
 const crypto = require('crypto');
-const fs = require('fs');
-const axios = require('axios');
 const CRL_URL = 'https://android.googleapis.com/attestation/status';
-const EC = require('elliptic').ec;
-const ec = new (require('elliptic').ec)('p256');  // Adjust the curve type based on your requirements
 const https = require('https');
 
 const app = express();
@@ -13,13 +9,10 @@ const port = 3456;
 
 // Middleware to parse JSON bodies
 app.use(bodyParser.json());
-const cbor = require('cbor');
 
 const { Certificate } = require('@fidm/x509');
-const { ASN1 } = require('@lapo/asn1js');
 const asn1 = require('asn1.js');
-const { redirectDocument } = require('react-router-dom');
-const { validateHeaderName } = require('http');
+
 
 const GOOGLE_ROOT_KEY =
 "-----BEGIN PUBLIC KEY-----\n" +
@@ -229,7 +222,7 @@ function parseAttestationExtension(cert) {
 
         console.log('Decoder type:', typeof KeyDescription);
         console.log('Decode method available:', KeyDescription.decode);
-        
+
         const decoded = KeyDescription.decode(buffer, 'der');  // 'der' is the encoding format
       
 
