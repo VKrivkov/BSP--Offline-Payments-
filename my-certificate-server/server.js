@@ -42,8 +42,6 @@ class KeyDescription {
                 this.keyMintSecurityLevel = reader.readEnumeration();  // Reading ENUMERATED SecurityLevel
                 this.attestationChallenge = reader.readString(0x04, true);  // Reading OCTET_STRING
                 this.uniqueId = reader.readString(0x04, true);  // Reading OCTET_STRING
-                this.softwareEnforced = this.parseAuthorizationList(reader);  // Parsing AuthorizationList
-                this.hardwareEnforced = this.parseAuthorizationList(reader);
             }
         } catch (error) {
             console.error('Failed to parse KeyDescription:', error);
@@ -54,41 +52,16 @@ class KeyDescription {
 
 
     parseAuthorizationList(reader) {
-        let list = {};
         if (reader.readSequence()) {
             while (reader.peek() != null) {
-                let tag = reader.peek();  // Check the next tag
                 console.log("Current tag: ", tag);
-                switch (tag) {
-                    case 0x81:  // Assuming 0x81 (129) is the tag for purpose
-                        list.purpose = this.readIntSet(reader);
-                        break;
-                    case 0x82:  // Assuming 0x82 (130) is the tag for algorithm
-                        list.algorithm = reader.readInt();
-                        break;
-                    case 0x83:  // Assuming 0x83 (131) is the tag for keySize
-                        list.keySize = reader.readInt();
-                        break;
-                    // Continue adjusting tags correctly based on your ASN.1 schema
-                    default:
-                        reader.readByte(); // This consumes the tag if it's unknown
-                        break;
+                reader.readByte();
                 }
             }
         }
-        return list;
     }
     
 
-    readIntSet(reader) {
-        let intSet = [];
-        if (reader.readSequence()) {
-            while (reader.peek() === asn1.Ber.Integer) {
-                intSet.push(reader.readInt());
-            }
-        }
-        return intSet;
-    }
 
     parseRootOfTrust(reader) {
         let root = {};
