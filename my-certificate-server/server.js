@@ -88,6 +88,7 @@ function fetchCRL() {
 //WORKS
 function verifyCertificateChain(certificates) {
     fetchCRL().then((crl) => {
+        let allValid = true;  // Assume all certificates are valid initially
         certificates.forEach(cert => {
             const certObj = new crypto.X509Certificate(cert.raw);
             const serialNumber = certObj.serialNumber.toLowerCase();
@@ -95,10 +96,12 @@ function verifyCertificateChain(certificates) {
                 console.log(`Certificate with serial ${serialNumber} is ${crl.entries[serialNumber].status}.`);
                 if (crl.entries[serialNumber].status === 'REVOKED') {
                     console.warn(`Revoked certificate detected: Serial ${serialNumber}`);
+                    allValid = false;  // Set to false if any certificate is revoked
                 }
             } else {
                 console.log(`Certificate with serial ${serialNumber} is valid.`);
             }
+            return allValid;  // Return the validity of the entire chain
         });
     }).catch((error) => {
         console.error('Error verifying certificate chain:', error);
@@ -141,6 +144,7 @@ app.post('/submit-certificate', async (req, res) => {
         for(i = 0; i < cert.length; i++)
             console.log("KEY", i, ":", cert[i].publicKey.toPEM());
 
+        console.log("The chain is valid: ", chainValid);
         rootValid = verifyRootPublicKey(RootCert.publicKey.toPEM())
         console.log("Root PK verified: ", rootValid);
 
@@ -149,6 +153,7 @@ app.post('/submit-certificate', async (req, res) => {
             message: 'Certificate processed successfully',
             rootValid,
             chainValid,
+            //TODO
             //attestationDetails
         });
 
