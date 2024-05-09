@@ -89,29 +89,32 @@ function fetchCRL() {
     });
 }
 //WORKS
-function verifyCertificateChain(certificates) {
-    validity = fetchCRL().then((crl) => {
-        let allValid = true;  // Assume all certificates are valid initially
-        certificates.forEach(cert => {
+async function verifyCertificateChain(certificates) {
+    try {
+        const crl = await fetchCRL(); // Wait for the CRL fetch to complete
+        let allValid = true; // Assume all certificates are valid initially
+
+        for (const cert of certificates) {
             const certObj = new crypto.X509Certificate(cert.raw);
             const serialNumber = certObj.serialNumber.toLowerCase();
             if (crl.entries[serialNumber]) {
                 console.log(`Certificate with serial ${serialNumber} is ${crl.entries[serialNumber].status}.`);
                 if (crl.entries[serialNumber].status === 'REVOKED') {
                     console.warn(`Revoked certificate detected: Serial ${serialNumber}`);
-                    allValid = false;  // Set to false if any certificate is revoked
+                    allValid = false; // If any certificate is revoked, set allValid to false
                 }
             } else {
                 console.log(`Certificate with serial ${serialNumber} is valid.`);
             }
-        });
-        return allValid;  // Return the validity of the entire chain
-    }).catch((error) => {
+        }
+
+        return allValid; // Return true if all certificates are valid, false otherwise
+    } catch (error) {
         console.error('Error verifying certificate chain:', error);
-    });
-    console.log("The chain is valid: ", validity);
-    return validity
+        return false; // Return false if there's an error in processing
+    }
 }
+
 
 //WORKS
 function verifyRootPublicKey(publicKey) {
@@ -149,6 +152,7 @@ app.post('/submit-certificate', async (req, res) => {
             console.log("KEY", i, ":", cert[i].publicKey.toPEM());
 
         rootValid = verifyRootPublicKey(RootCert.publicKey.toPEM())
+        console.log("CHAIN verified: ", chainValid);
         console.log("Root PK verified: ", rootValid);
 
 
