@@ -73,14 +73,25 @@ class VerifiedBootState {
 class KeyDescription {
     constructor(reader) {
         try {
+            // Read the outer sequence
             if (reader.readSequence()) {
                 this.attestationVersion = reader.readInt();
                 this.attestationSecurityLevel = new SecurityLevel(reader);
+                this.keyMintVersion = reader.readInt();
+                this.keyMintSecurityLevel = new SecurityLevel(reader);
+                this.attestationChallenge = reader.readString(asn1.Ber.OctetString, true);
+                this.uniqueId = reader.readString(asn1.Ber.OctetString, true);
+                // Handle optional components with conditional reading
+                if (reader.peek() === asn1.Ber.Context | 0) {
+                    this.softwareEnforced = new AuthorizationList(reader);
+                }
+                if (reader.peek() === asn1.Ber.Context | 1) {
+                    this.hardwareEnforced = new AuthorizationList(reader);
+                }
             }
         } catch (error) {
             console.error('Failed to parse KeyDescription:', error);
-            console.log('Reader offset:', reader.offset);
-            console.log('Remaining bytes:', reader.length - reader.offset);
+            console.log('Reader state:', reader);
             throw error;
         }
     }
@@ -185,15 +196,9 @@ function parseAttestationExtension(cert) {
         if (!keyDescriptionExt) {
             throw new Error('Key attestation extension not found');
         }
-        console.log('Key attestation extension ', keyDescriptionExt);
 
+        console.log('Extension raw data:', keyDescriptionExt.value.toString('hex'));
         const reader = new Ber.Reader(keyDescriptionExt.value);
-
-
-        while(reader.readSequence()) {
-            console.log('Tag: ', reader.peek());
-        }
-
         const keyDescription = new KeyDescription(reader);
         console.log('Parsed Key Description:', keyDescription);
         
