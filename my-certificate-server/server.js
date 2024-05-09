@@ -12,7 +12,7 @@ const port = 3456;
 app.use(bodyParser.json());
 
 const { Certificate } = require('@fidm/x509');
-const asn1 = require('asn1.js');
+const asn1 = require('asn1');
 
 
 const GOOGLE_ROOT_KEY =
@@ -219,7 +219,7 @@ function parseAttestationExtension(cert) {
 
         const asn1Buffer = Buffer.from(hexString, 'hex');
 
-        var result = KeyDescription.decode(asn1Buffer, 'der', { partial: true });
+        var result = KeyDescription.decode(asn1Buffer, 'der');
         console.log(result);
 
 
