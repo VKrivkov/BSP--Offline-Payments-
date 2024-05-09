@@ -50,40 +50,6 @@ class KeyDescription {
         }
     }
 
-
-    parseAuthorizationList(reader) {
-        if (reader.readSequence()) {
-            while (reader.peek() != null) {
-                console.log("Current tag: ", tag);
-                reader.readByte();
-                }
-            }
-        }
-    }
-    
-
-
-    parseRootOfTrust(reader) {
-        let root = {};
-        if (reader.readSequence()) {
-            root.verifiedBootKey = reader.readString(asn1.Ber.OctetString, true);
-            root.deviceLocked = reader.readBoolean();
-            root.verifiedBootState = this.parseVerifiedBootState(reader);
-            root.verifiedBootHash = reader.readString(asn1.Ber.OctetString, true);
-        }
-        return root;
-    }
-
-    parseVerifiedBootState(reader) {
-        let stateValue = reader.readEnumeration();
-        switch (stateValue) {
-            case 0: return "Verified";
-            case 1: return "SelfSigned";
-            case 2: return "Unverified";
-            case 3: return "Failed";
-            default: return "Unknown";
-        }
-    }
 }
 
 
