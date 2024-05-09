@@ -139,7 +139,7 @@ function parseAttestationExtension(cert) {
         }
 
         // Parsing the extension as ASN.1
-        const asn1 = ASN1.decode(keyDescriptionExt.raw);
+        const asn1 = ASN1.decode(Buffer.from(keyDescriptionExt.value, 'base64'));
         const keyDescription = parseKeyDescription(asn1);
 
         return keyDescription;
