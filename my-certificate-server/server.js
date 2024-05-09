@@ -36,9 +36,9 @@ class KeyDescription {
         try {
             if (reader.readSequence()) {
                 this.attestationVersion = 200;  // Static value as per your schema
-                this.attestationSecurityLevel = reader.readEnumerated();  // Reading ENUMERATED SecurityLevel
+                this.attestationSecurityLevel = reader.readEnumeration();  // Reading ENUMERATED SecurityLevel
                 this.keyMintVersion = reader.readInt();  // Reading INTEGER
-                this.keyMintSecurityLevel = reader.readEnumerated();  // Reading ENUMERATED SecurityLevel
+                this.keyMintSecurityLevel = reader.readEnumeration();  // Reading ENUMERATED SecurityLevel
                 this.attestationChallenge = reader.readString(0x04, true);  // Reading OCTET_STRING
                 this.uniqueId = reader.readString(0x04, true);  // Reading OCTET_STRING
                 this.softwareEnforced = this.parseAuthorizationList(reader);  // Parsing AuthorizationList
@@ -75,7 +75,7 @@ class KeyDescription {
         if (reader.readSequence()) {
             root.verifiedBootKey = reader.readString(0x04, true);
             root.deviceLocked = reader.readBoolean();
-            root.verifiedBootState = reader.readEnumerated();
+            root.verifiedBootState = reader.readEnumeration();
             root.verifiedBootHash = reader.readString(0x04, true);
         }
         return root;
