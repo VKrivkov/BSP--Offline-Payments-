@@ -12,7 +12,7 @@ const port = 3456;
 app.use(bodyParser.json());
 
 const { Certificate } = require('@fidm/x509');
-const asn1 = require('asn1');
+const asn1 = require('asn1js');
 
 
 const GOOGLE_ROOT_KEY =
