@@ -166,8 +166,8 @@ async function verifyCertificateChain(certificates) {
         const crl = await fetchCRL(); // Wait for the CRL fetch to complete
         let allValid = true; // Assume all certificates are valid initially
 
-        for (const cert of certificates) {
-            const certObj = new crypto.X509Certificate(cert.raw);
+        for (let i = 0; i < certificates.length; i++) {
+            const certObj = new crypto.X509Certificate(certificates[i].raw);
             const serialNumber = certObj.serialNumber.toLowerCase();
             if (crl.entries[serialNumber]) {
                 console.log(`Certificate with serial ${serialNumber} is ${crl.entries[serialNumber].status}.`);
